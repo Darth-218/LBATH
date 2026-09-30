@@ -1,1 +1,1 @@
-# LBATH
+# LLM Based Agentic Threat Hunting
