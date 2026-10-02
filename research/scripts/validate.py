@@ -4,7 +4,8 @@
 Checks, in order:
   1. Every file parses as YAML and is a mapping.
   2. Every entry conforms to schema.json.
-  3. The filename stem matches the entry's `id`.
+  3. The filename stem matches the entry's `id` (DOI `/` escaped as `_`;
+     see expected_stem).
   4. No duplicate ids across papers/.
   5. Every notes/<id>.yaml has a matching papers/<id>.yaml.
   6. Every `related[].id` resolves to a known paper.
@@ -24,6 +25,8 @@ from pathlib import Path
 try:
     import yaml
     from jsonschema import Draft202012Validator, FormatChecker
+    from referencing import Registry
+    from referencing.jsonschema import DRAFT202012
 except ImportError as exc:  # pragma: no cover
     sys.exit(
         f"missing dependency: {exc.name}\n"
@@ -35,6 +38,12 @@ PAPERS_DIR = RESEARCH / "papers"
 NOTES_DIR = RESEARCH / "notes"
 SCHEMA_PATH = RESEARCH / "schema.json"
 
+# Base URI under which schema.json is mounted for reference resolution.
+# Entries are validated against `schema.json` as a whole via a `$ref`
+# wrapper: a `$defs` sub-document passed on its own cannot resolve its own
+# `#/$defs/…` references.
+ROOT_URI = "urn:lbath:schema"
+
 # Relations an author may declare. The inverse of each is derived by
 # render.py and must never be written by hand: declaring one direction is
 # the convention, not a preference.
@@ -43,6 +52,16 @@ FORWARD_RELATIONS = {"supersedes", "extends", "contradicts", "same-authors"}
 # Relations where a back-edge is a genuine contradiction rather than
 # redundant symmetry.
 ASYMMETRIC_RELATIONS = {"supersedes", "extends"}
+
+
+def expected_stem(entry_id: str) -> str:
+    """Filesystem-safe stem for an id.
+
+    Only DOI ids contain `/`, which cannot appear in a filename; it is
+    escaped as `_`. arXiv ids pass through unchanged. The `id` field always
+    keeps the true identifier.
+    """
+    return entry_id.replace("/", "_")
 
 
 class Report:
@@ -98,8 +117,23 @@ def explain(error) -> str:
     return err.message
 
 
-def check_schema(data, schema, path: Path, report: Report) -> bool:
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+def make_validator(definition_id: str, schema: dict):
+    """Validate an entry against one `$defs` section of the root schema.
+
+    A bare `$defs` sub-schema is not a self-contained document: its
+    `$ref: "#/$defs/…"` pointers resolve against the root. We therefore
+    register the root under ROOT_URI and validate through a wrapper that
+    points into it.
+    """
+    registry = Registry().with_resource(ROOT_URI, DRAFT202012.create_resource(schema))
+    return Draft202012Validator(
+        {"$ref": f"{ROOT_URI}#/$defs/{definition_id}"},
+        registry=registry,
+        format_checker=FormatChecker(),
+    )
+
+
+def check_schema(data, validator, path: Path, report: Report) -> bool:
     errors = sorted(validator.iter_errors(data), key=lambda e: list(e.absolute_path))
     for err in errors:
         loc = "$" + "".join(
@@ -109,20 +143,21 @@ def check_schema(data, schema, path: Path, report: Report) -> bool:
     return not errors
 
 
-def load_entries(directory: Path, schema, report: Report) -> tuple[dict, dict]:
+def load_entries(directory: Path, definition_id: str, schema, report: Report) -> tuple[dict, dict]:
     """Return ({id: data}, {id: path}) for every valid entry in `directory`."""
     entries: dict = {}
     paths: dict = {}
+    validator = make_validator(definition_id, schema)
 
     for path in sorted(directory.glob("*.yaml")):
         data = load(path, report)
         if data is None:
             continue
-        if not check_schema(data, schema, path, report):
+        if not check_schema(data, validator, path, report):
             continue
 
         entry_id = data["id"]
-        if entry_id != path.stem:
+        if expected_stem(entry_id) != path.stem:
             report.error(
                 path, f"id {entry_id!r} does not match filename stem {path.stem!r}"
             )
@@ -213,15 +248,14 @@ def main() -> int:
         return 1
 
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-    defs = schema["$defs"]
 
     for directory in (PAPERS_DIR, NOTES_DIR):
         if not directory.exists():
             print(f"missing directory: {_display(directory)}", file=sys.stderr)
             return 1
 
-    papers, paper_paths = load_entries(PAPERS_DIR, defs["paper"], report)
-    notes, note_paths = load_entries(NOTES_DIR, defs["note"], report)
+    papers, paper_paths = load_entries(PAPERS_DIR, "paper", schema, report)
+    notes, note_paths = load_entries(NOTES_DIR, "note", schema, report)
 
     check_relations(papers, paper_paths, report)
     check_notes(notes, note_paths, papers, report)

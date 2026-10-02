@@ -42,6 +42,20 @@ fails, references just quietly stop resolving.
 
 The readable name goes in `short_name`. That is what `COMPARISON.md` displays.
 
+### DOI ids in filenames
+
+DOI ids contain a `/`, which cannot appear in a filename. When a `doi-…`
+entry is stored as `papers/<id>.yaml`, the stem escapes `/` as `_`:
+
+```sh
+# id: doi-10.1109/ACCESS.2026.3707573
+research/papers/doi-10.1109_ACCESS.2026.3707573.yaml
+```
+
+The `id` field always keeps the true DOI; only the filename stem is escaped.
+`validate.py` applies the inverse escape (`_` → `/`) when matching stems, and
+arXiv ids pass through unchanged.
+
 ### This rule also prevents duplicates
 
 Nothing in the schema stops one person adding `arxiv-2401.12345` and another
@@ -134,6 +148,8 @@ What the paper's evaluation measures.
 - `attack-mapping` — mapping observations to ATT&CK or an equivalent framework.
 - `incident-response` — reactive handling of a confirmed incident.
 - `detection-engineering` — authoring or tuning detection rules.
+- `vulnerability-discovery` — automated finding or validating exploitable
+  flaws (code audit, fuzzing, offensive agents).
 
 ### Tie-breaks
 
@@ -142,6 +158,10 @@ one the abstract leads with. Abstracts overclaim scope; evaluations don't.
 
 If the evaluation measures two genuinely, pick the one that consumes more of
 the results section and note the other in `limitations`.
+
+If the evaluation measures whether a specific flaw is reachable, exploitable,
+or patchable, that is `vulnerability-discovery`, not `threat-hunting` — which
+is searching telemetry for an adversary already inside.
 
 ## extraction_basis
 

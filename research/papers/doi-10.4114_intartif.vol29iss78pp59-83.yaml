@@ -1,0 +1,74 @@
+schema_version: 1
+
+id: doi-10.4114/intartif.vol29iss78pp59-83
+short_name: "LLM core agent survey"
+title: "Unveiling the Frontiers of Cyber Threat Hunting: A Comprehensive Review of LLM-Based Approaches"
+authors: ["Dilkhaz Yaseen Mohammed", "Shahram Jamali"]
+year: 2026
+venue: "Inteligencia Artificial (Iberoamerican Journal of Artificial Intelligence), 29(78), 59-83"
+links:
+  paper: "https://doi.org/10.4114/intartif.vol29iss78pp59-83"
+
+extraction_basis: full-text
+
+problem: threat-hunting
+input_modalities: ["system logs", "network traffic", "endpoint telemetry", "threat intelligence feeds"]
+threat_intel_standards: [MITRE ATT&CK]
+
+architecture:
+  paradigm: agentic
+  components:
+    - name: LLM core agent
+      role: "reference supervisor: reason, decompose tasks, and decide the next action"
+      inputs: ["knowledge-base context", "user query or event"]
+      outputs: ["actions", "hypotheses", "tool calls"]
+      implementation: "LLM with reasoning module, task decomposition, and explicit decision-making logic"
+    - name: Knowledge sources
+      role: "supply grounding context for reasoning"
+      inputs: ["threat intel feeds", "historical attack data"]
+      outputs: ["retrieved context"]
+      implementation: "threat intel database, historical attack data, MITRE ATT&CK, organizational context; RAG and vector/knowledge stores recommended"
+    - name: Tool executors
+      role: "touch external systems on behalf of the agent"
+      inputs: ["tool-call intents"]
+      outputs: ["tool results / observations"]
+      implementation: "network scanner, log analyzer, vulnerability scanner, SIEM integration, incident response"
+    - name: Monitoring and feedback loop
+      role: "human oversight and continuous learning"
+      inputs: ["agent behavior and outcomes"]
+      outputs: ["updated policies and prompts"]
+      implementation: "human-in-the-loop escalation on high-confidence threat or impasse; TRiSM-managed multi-agent escalation"
+  orchestration: "knowledge-based execution loop: hypothesize -> query data sources -> analyze -> iterate; escalate to a human only on a high-confidence threat or an impasse, with confidence thresholding"
+  memory:
+    type: vector
+    details: "RAG and vector stores recommended for long-term knowledge (historical attack data, behavioral profiles, ATT&CK); short-term conversational context; knowledge graphs for campaign-level correlation."
+  tools: ["network scanner", "log analyzer", "vulnerability scanner", "SIEM integration", "incident response"]
+  models:
+    - name: "LLM (unspecified core)"
+      role: "reasoning"
+      access: unknown
+    - name: "attention / transformer embeddings"
+      role: "ATT&CK TTP mapping"
+      access: unknown
+    - name: "NER models"
+      role: "IoC extraction"
+      access: unknown
+
+evaluation:
+  datasets: ["UWF-ZeekData24", "IDSIoT2024", "FakeCTI"]
+  metrics: ["accuracy", "precision", "recall", "F1", "ROC-AUC", "relevance", "actionability", "timeliness", "completeness", "latency", "throughput", "analyst-workload reduction", "MTTD", "MTTR", "adversarial resilience", "out-of-distribution detection", "explanation quality"]
+  baselines: ["keyword extraction", "traditional NER"]
+  reported_results: "Cross-study synthesis (Table 4): binary classification AUC 0.90-0.97, F1 0.85-0.94; TTP identification precision 0.75-0.88, recall 0.68-0.82; IoT detection accuracy 0.82-0.91; CTI extraction precision 0.80-0.92; incident-timeline ordering 0.85-0.93"
+  reproducible: "unknown"
+
+limitations:
+  - "Systematic review, so no implementation or artifacts of its own"
+  - "Heterogeneous metrics across surveyed studies limit direct comparison"
+  - "Rare TTPs under-recalled (18-32% missed)"
+  - "Prompt injection, data poisoning (1-5%), and poor confidence calibration remain exploitable"
+  - "Benchmark-to-production gap; few longitudinal operational SOC deployments"
+  - "Fine-tuning cost (tens of thousands of USD for GPT-3-class models) and RAG latency (2-5x)"
+
+review:
+  added_by: "@ahmedmaboud"
+  date: "2026-10-03"

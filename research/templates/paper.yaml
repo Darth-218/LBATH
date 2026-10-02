@@ -1,4 +1,5 @@
-# Copy to research/papers/<id>.yaml. The filename stem must equal `id`.
+# Copy to research/papers/<id>.yaml. The filename stem must equal `id`;
+# for doi-… ids, replace the `/` with `_` in the stem (see CONVENTIONS.md).
 # Run `python research/scripts/validate.py` before opening a PR.
 # Replace every TODO before committing.
 schema_version: 1
@@ -16,7 +17,7 @@ links:
 
 extraction_basis: full-text       # full-text | abstract-only | cited-by | third-party-summary
 
-problem: threat-hunting           # threat-hunting | cti-triage | attack-mapping | incident-response | detection-engineering
+problem: threat-hunting           # threat-hunting | cti-triage | attack-mapping | incident-response | detection-engineering | vulnerability-discovery
 input_modalities: []
 # threat_intel_standards: [MITRE ATT&CK]
 
@@ -56,4 +57,4 @@ limitations: []
 
 review:
   added_by: "@TODO"
-  date: 2026-10-02
+  date: "2026-10-02"

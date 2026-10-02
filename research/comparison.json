@@ -1,0 +1,697 @@
+{
+  "generated_by": "research/scripts/render.py",
+  "overlap": {
+    "datasets": {},
+    "models": {},
+    "tools": {}
+  },
+  "papers": [
+    {
+      "architecture": {
+        "components": [
+          {
+            "implementation": "Splunk Enterprise with Splunk Universal Forwarder",
+            "inputs": [
+              "raw logs from endpoints and IDS"
+            ],
+            "name": "SIEM indexing",
+            "outputs": [
+              "indexed events"
+            ],
+            "role": "collect and index security logs"
+          },
+          {
+            "implementation": "fixed 5-minute windows; mean/max of ports and bytes, IPs, protocol",
+            "inputs": [
+              "indexed events"
+            ],
+            "name": "Data cleaning and feature extraction",
+            "outputs": [
+              "per-window feature vectors"
+            ],
+            "role": "deduplicate events and build windowed features"
+          },
+          {
+            "implementation": "reconstruction autoencoder |F|->8->2->8->|F|, MSE error, trained benign-only on the first 25% of the timeline",
+            "inputs": [
+              "window features"
+            ],
+            "name": "Autoencoder anomaly detector",
+            "outputs": [
+              "anomaly score"
+            ],
+            "role": "score how unusual a window is"
+          },
+          {
+            "implementation": "PPO-trained 2x64 MLP with ReLU and softmax",
+            "inputs": [
+              "window features (anomaly score excluded)"
+            ],
+            "name": "DRL triage policy",
+            "outputs": [
+              "action with confidence"
+            ],
+            "role": "decide Allow vs Contain per window"
+          },
+          {
+            "implementation": "priority = action x score; forward only when above threshold (5)",
+            "inputs": [
+              "policy action",
+              "anomaly score"
+            ],
+            "name": "Triage and prioritization",
+            "outputs": [
+              "priority-flagged windows"
+            ],
+            "role": "gate which windows reach the LLM"
+          },
+          {
+            "implementation": "CrewAI with Senior SOC Triage Analyst, Threat Intelligence Analyst, and Orchestrator; verbatim role prompts",
+            "inputs": [
+              "escalated windows"
+            ],
+            "name": "LLM multi-agent layer",
+            "outputs": [
+              "triage report",
+              "SPL queries",
+              "MITRE mapping",
+              "remediation"
+            ],
+            "role": "produce risk assessment, SPL queries, and ATT&CK mapping"
+          },
+          {
+            "implementation": "human analyst runs SPL in read-only mode",
+            "inputs": [
+              "SPL queries",
+              "raw logs"
+            ],
+            "name": "Splunk verification + human decision",
+            "outputs": [
+              "Block / Allow / Monitor decision"
+            ],
+            "role": "validate generated SPL against real logs and make the call"
+          }
+        ],
+        "memory": {
+          "details": "No persistent store; per-window feature vectors are recomputed from raw logs, plus a SOC-scoped anonymization mapping table.",
+          "type": "none"
+        },
+        "models": [
+          {
+            "access": "unknown",
+            "name": "autoencoder (8-2-8)",
+            "role": "anomaly detection"
+          },
+          {
+            "access": "unknown",
+            "name": "PPO MLP policy (2x64)",
+            "role": "triage decision"
+          },
+          {
+            "access": "api",
+            "name": "ChatGPT (Senior SOC Triage Analyst)",
+            "role": "reasoning"
+          },
+          {
+            "access": "api",
+            "name": "ChatGPT (Threat Intelligence Analyst)",
+            "role": "reasoning"
+          },
+          {
+            "access": "api",
+            "name": "ChatGPT (Orchestrator)",
+            "role": "orchestration"
+          }
+        ],
+        "orchestration": "strict sequential pipeline with two gates: DRL window filter, then priority threshold before the LLM; human is final decision authority; the anomaly score is deliberately excluded from the DRL state to prevent feature leakage; pseudonymization applied before any LLM call with a reversible SOC-side placeholder mapping",
+        "paradigm": "agentic",
+        "tools": [
+          "Splunk Enterprise",
+          "Splunk Universal Forwarder",
+          "Suricata",
+          "CrewAI",
+          "SPL"
+        ]
+      },
+      "authors": [
+        "Rishikesh Sahay",
+        "Bell Eapen",
+        "Weizhi Meng",
+        "Md Rasel Al Mamun",
+        "Nikhil Kumar Dora",
+        "Manjusha Sumasadan",
+        "Sumit Kumar Tetarave",
+        "Elyson De La Cruz"
+      ],
+      "evaluation": {
+        "baselines": [
+          "reward-shaping modes A/B/C/D sweep"
+        ],
+        "datasets": [
+          "BOSS of the SOC (BOTS) subset (~12k instances)",
+          "custom simulated corpus (300k instances, Kali -> Windows 11)"
+        ],
+        "metrics": [
+          "precision",
+          "recall",
+          "F1",
+          "decision cost",
+          "regret",
+          "traffic forwarded to LLM"
+        ],
+        "reported_results": "BOTS: mode B F1 0.861, recall 0.873; simulated corpus: mode D precision 0.926, recall 0.696, F1 0.795 with the lowest regret 1.358; ~63-65% reduction in traffic forwarded to the LLM",
+        "reproducible": "partial"
+      },
+      "extraction_basis": "full-text",
+      "id": "arxiv-2603.23966",
+      "input_modalities": [
+        "network flow logs",
+        "IDS alerts"
+      ],
+      "limitations": [
+        "Fixed 5-minute windows can miss short-lived attacks",
+        "Binary action space (Allow/Contain) only; no monitor/throttle/escalate",
+        "No RAG or vector store; context management is funneling-only",
+        "No retry or fallback logic documented for LLM or SPL failures",
+        "Read-only by design; all mitigation executed by humans (intentional)",
+        "Dataset scale and diversity limited; single-attacker simulation",
+        "Local-LLM accuracy and hallucination risk untested"
+      ],
+      "links": {
+        "paper": "https://arxiv.org/abs/2603.23966"
+      },
+      "problem": "threat-hunting",
+      "review": {
+        "added_by": "@ahmedmaboud",
+        "date": "2026-10-03"
+      },
+      "schema_version": 1,
+      "short_name": "Splunk SOC triage",
+      "threat_intel_standards": [
+        "MITRE ATT&CK"
+      ],
+      "title": "Policy-Guided Threat Hunting: An LLM enabled Framework with Splunk SOC Triage",
+      "venue": "arXiv preprint arXiv:2603.23966",
+      "year": 2026
+    },
+    {
+      "architecture": {
+        "components": [
+          {
+            "implementation": "reasoning-class LLM with plan-then-execute (PtE) and PS+ prompting, anchored to an ATT&CK-derived task tree",
+            "inputs": [
+              "tool observations",
+              "task-tree constraints"
+            ],
+            "name": "Planner",
+            "outputs": [
+              "ordered plan and subtasks"
+            ],
+            "role": "build and maintain the investigation plan"
+          },
+          {
+            "implementation": "cheap-model specialists (recon, scan, exploit, report) with wrappers such as nmap_scan(ip_address) and run_code(python_script)",
+            "inputs": [
+              "plan steps"
+            ],
+            "name": "Executor agents",
+            "outputs": [
+              "tool results and observations"
+            ],
+            "role": "run subtasks and call tools"
+          },
+          {
+            "implementation": "finite-state machine / task graph / PTT / TCG (e.g., AutoPT FSM, PentestGPT PTT, VulnBot graph, xOffense TCG)",
+            "inputs": [
+              "plan updates",
+              "results"
+            ],
+            "name": "Structured state",
+            "outputs": [
+              "current state",
+              "next actions"
+            ],
+            "role": "track plan state between agents"
+          },
+          {
+            "implementation": "static and dynamic analysis filters between agent output and tool execution",
+            "inputs": [
+              "hypotheses and generated queries"
+            ],
+            "name": "Deterministic verification layer",
+            "outputs": [
+              "verified or rejected findings"
+            ],
+            "role": "check AI claims against real tools before use"
+          },
+          {
+            "implementation": "manual review plus enrollment scoping and rules of engagement",
+            "inputs": [
+              "pending destructive action"
+            ],
+            "name": "Human approval gate",
+            "outputs": [
+              "approval or denial"
+            ],
+            "role": "authorize destructive actions"
+          },
+          {
+            "implementation": "two-tier: context window plus vector DB/RAG with summarization, pruning, and HTML minification",
+            "inputs": [
+              "past artifacts",
+              "retrieval queries"
+            ],
+            "name": "Memory",
+            "outputs": [
+              "retrieved context"
+            ],
+            "role": "provide long-term context"
+          }
+        ],
+        "memory": {
+          "details": "Two-tier memory: short-term context window plus long-term vector DB / RAG with summarization, pruning, and HTML minification; memory-poisoning risks highlighted.",
+          "type": "vector"
+        },
+        "models": [
+          {
+            "access": "api",
+            "name": "Claude 4.5 Opus",
+            "role": "reasoning"
+          },
+          {
+            "access": "api",
+            "name": "Gemini 3 Pro",
+            "role": "reasoning"
+          },
+          {
+            "access": "api",
+            "name": "GPT-4",
+            "role": "reasoning"
+          },
+          {
+            "access": "open-weights",
+            "name": "Llama-3-8B",
+            "role": "planning under guided task tree"
+          }
+        ],
+        "orchestration": "plan-then-execute loop with a reasoning-tier planner and cheap executors; per-stage tool-call and token budgets; checkpointed replanning on failure; deterministic verification between agent output and tool execution; human approval gates for destructive actions; sandboxed containers",
+        "paradigm": "agentic",
+        "tools": [
+          "nmap",
+          "sqlmap",
+          "OWASP ZAP",
+          "CodeQL",
+          "Semgrep",
+          "AFL",
+          "libFuzzer",
+          "MCP servers",
+          "sandboxed containers (Docker/Kali, E2B, Daytona, Modal)"
+        ]
+      },
+      "authors": [
+        "Robel Addis",
+        "Kiran Porter",
+        "Jayden Ryan",
+        "Micah Stull",
+        "Shengjie Xu",
+        "Paul Wagner",
+        "Robert Honomichl",
+        "Steven Forsyth"
+      ],
+      "evaluation": {
+        "baselines": [
+          "CodeQL",
+          "self-guided (unanchored) agents",
+          "stock (non-Kali) environments"
+        ],
+        "datasets": [
+          "Cybench",
+          "NYU CTF Bench",
+          "AutoPenBench",
+          "InterCode-CTF",
+          "CyberSecEval 3",
+          "AgentDojo",
+          "CTFExplorer",
+          "HackTheBox (UnderPass)",
+          "XBOW benchmark",
+          "AIxCC finals"
+        ],
+        "metrics": [
+          "task completion",
+          "F1",
+          "precision",
+          "recall",
+          "cost per hunt",
+          "latency",
+          "vulnerabilities found/patched",
+          "prompt-injection success"
+        ],
+        "reported_results": "NYU CTF Bench 2026: Claude 4.5 Opus 59%, Gemini 3 Pro 52%, +9.5 points with a Kali tool environment; AIxCC finalists found 54/63 (86%) synthetic vulnerabilities and patched 43 (68%) across 5.4M LoC plus 18 real-world vulnerabilities; IRIS found 55 vs CodeQL 27; guided task-tree completion 71.8-78.6% vs 13.5-16.5% self-guided; AutoPT $0.024/test, RapidPen $0.30-0.60/test",
+        "reproducible": "partial"
+      },
+      "extraction_basis": "full-text",
+      "id": "doi-10.1109/ACCESS.2026.3707573",
+      "input_modalities": [
+        "source code",
+        "web and API traffic",
+        "binaries",
+        "network traffic"
+      ],
+      "limitations": [
+        "CTF benchmarks do not equal production (authorization, rate limits, ambiguous success)",
+        "Hallucination documented: invented file paths, misread forms, inferred nonexistent control flow",
+        "Indirect prompt injection via untrusted page and log content; tool, memory, and RAG poisoning",
+        "Containment imperfect in practice (shared kernels, metadata services; Clinejection incident hit ~4,000 developers)",
+        "Context limits and lost-in-the-middle; retrieval failures can omit crucial evidence",
+        "Reasoning-class model costs 5-20x per token",
+        "Dual-use: scoped defensive prompts trivially repurposable"
+      ],
+      "links": {
+        "paper": "https://doi.org/10.1109/ACCESS.2026.3707573"
+      },
+      "problem": "vulnerability-discovery",
+      "review": {
+        "added_by": "@ahmedmaboud",
+        "date": "2026-10-03"
+      },
+      "schema_version": 1,
+      "short_name": "LLM agents for vuln discovery",
+      "threat_intel_standards": [
+        "MITRE ATT&CK"
+      ],
+      "title": "LLM-Based Intelligent Agents for Cybersecurity: A Tutorial and Survey of Automated Vulnerability Discovery",
+      "venue": "IEEE Access",
+      "year": 2026
+    },
+    {
+      "architecture": {
+        "components": [
+          {
+            "implementation": "LLM with reasoning module, task decomposition, and explicit decision-making logic",
+            "inputs": [
+              "knowledge-base context",
+              "user query or event"
+            ],
+            "name": "LLM core agent",
+            "outputs": [
+              "actions",
+              "hypotheses",
+              "tool calls"
+            ],
+            "role": "reference supervisor: reason, decompose tasks, and decide the next action"
+          },
+          {
+            "implementation": "threat intel database, historical attack data, MITRE ATT&CK, organizational context; RAG and vector/knowledge stores recommended",
+            "inputs": [
+              "threat intel feeds",
+              "historical attack data"
+            ],
+            "name": "Knowledge sources",
+            "outputs": [
+              "retrieved context"
+            ],
+            "role": "supply grounding context for reasoning"
+          },
+          {
+            "implementation": "network scanner, log analyzer, vulnerability scanner, SIEM integration, incident response",
+            "inputs": [
+              "tool-call intents"
+            ],
+            "name": "Tool executors",
+            "outputs": [
+              "tool results / observations"
+            ],
+            "role": "touch external systems on behalf of the agent"
+          },
+          {
+            "implementation": "human-in-the-loop escalation on high-confidence threat or impasse; TRiSM-managed multi-agent escalation",
+            "inputs": [
+              "agent behavior and outcomes"
+            ],
+            "name": "Monitoring and feedback loop",
+            "outputs": [
+              "updated policies and prompts"
+            ],
+            "role": "human oversight and continuous learning"
+          }
+        ],
+        "memory": {
+          "details": "RAG and vector stores recommended for long-term knowledge (historical attack data, behavioral profiles, ATT&CK); short-term conversational context; knowledge graphs for campaign-level correlation.",
+          "type": "vector"
+        },
+        "models": [
+          {
+            "access": "unknown",
+            "name": "LLM (unspecified core)",
+            "role": "reasoning"
+          },
+          {
+            "access": "unknown",
+            "name": "attention / transformer embeddings",
+            "role": "ATT&CK TTP mapping"
+          },
+          {
+            "access": "unknown",
+            "name": "NER models",
+            "role": "IoC extraction"
+          }
+        ],
+        "orchestration": "knowledge-based execution loop: hypothesize -> query data sources -> analyze -> iterate; escalate to a human only on a high-confidence threat or an impasse, with confidence thresholding",
+        "paradigm": "agentic",
+        "tools": [
+          "network scanner",
+          "log analyzer",
+          "vulnerability scanner",
+          "SIEM integration",
+          "incident response"
+        ]
+      },
+      "authors": [
+        "Dilkhaz Yaseen Mohammed",
+        "Shahram Jamali"
+      ],
+      "evaluation": {
+        "baselines": [
+          "keyword extraction",
+          "traditional NER"
+        ],
+        "datasets": [
+          "UWF-ZeekData24",
+          "IDSIoT2024",
+          "FakeCTI"
+        ],
+        "metrics": [
+          "accuracy",
+          "precision",
+          "recall",
+          "F1",
+          "ROC-AUC",
+          "relevance",
+          "actionability",
+          "timeliness",
+          "completeness",
+          "latency",
+          "throughput",
+          "analyst-workload reduction",
+          "MTTD",
+          "MTTR",
+          "adversarial resilience",
+          "out-of-distribution detection",
+          "explanation quality"
+        ],
+        "reported_results": "Cross-study synthesis (Table 4): binary classification AUC 0.90-0.97, F1 0.85-0.94; TTP identification precision 0.75-0.88, recall 0.68-0.82; IoT detection accuracy 0.82-0.91; CTI extraction precision 0.80-0.92; incident-timeline ordering 0.85-0.93",
+        "reproducible": "unknown"
+      },
+      "extraction_basis": "full-text",
+      "id": "doi-10.4114/intartif.vol29iss78pp59-83",
+      "input_modalities": [
+        "system logs",
+        "network traffic",
+        "endpoint telemetry",
+        "threat intelligence feeds"
+      ],
+      "limitations": [
+        "Systematic review, so no implementation or artifacts of its own",
+        "Heterogeneous metrics across surveyed studies limit direct comparison",
+        "Rare TTPs under-recalled (18-32% missed)",
+        "Prompt injection, data poisoning (1-5%), and poor confidence calibration remain exploitable",
+        "Benchmark-to-production gap; few longitudinal operational SOC deployments",
+        "Fine-tuning cost (tens of thousands of USD for GPT-3-class models) and RAG latency (2-5x)"
+      ],
+      "links": {
+        "paper": "https://doi.org/10.4114/intartif.vol29iss78pp59-83"
+      },
+      "problem": "threat-hunting",
+      "review": {
+        "added_by": "@ahmedmaboud",
+        "date": "2026-10-03"
+      },
+      "schema_version": 1,
+      "short_name": "LLM core agent survey",
+      "threat_intel_standards": [
+        "MITRE ATT&CK"
+      ],
+      "title": "Unveiling the Frontiers of Cyber Threat Hunting: A Comprehensive Review of LLM-Based Approaches",
+      "venue": "Inteligencia Artificial (Iberoamerican Journal of Artificial Intelligence), 29(78), 59-83",
+      "year": 2026
+    },
+    {
+      "architecture": {
+        "components": [
+          {
+            "implementation": "graph attention network fused with transformer-based sequence modeling",
+            "inputs": [
+              "raw telemetry and process-chain events"
+            ],
+            "name": "Detector agent",
+            "outputs": [
+              "behavioral anomaly signals"
+            ],
+            "role": "finds behavioral anomalies in process execution chains"
+          },
+          {
+            "implementation": "reinforcement-learning policy (PPO-style, AutoHunt referenced as prior art)",
+            "inputs": [
+              "detector anomaly signals"
+            ],
+            "name": "Hunter agent",
+            "outputs": [
+              "prioritized hunt paths"
+            ],
+            "role": "prioritizes high-value investigation paths during hunting"
+          },
+          {
+            "implementation": "LLM (model unspecified)",
+            "inputs": [
+              "anomaly signals",
+              "prioritized hunt paths"
+            ],
+            "name": "LLM orchestrator",
+            "outputs": [
+              "threat narrative",
+              "alerts",
+              "SOAR playbooks"
+            ],
+            "role": "synthesizes narratives, emits low-false-positive alerts, and generates remediation playbooks"
+          },
+          {
+            "implementation": "reflective autonomy loop (Reflexion-like)",
+            "inputs": [
+              "action history and outcomes"
+            ],
+            "name": "Critic module",
+            "outputs": [
+              "strategy adjustments and feedback"
+            ],
+            "role": "reviews past actions and adjusts future strategy"
+          },
+          {
+            "implementation": "SOAR platform running autonomously",
+            "inputs": [
+              "remediation playbooks"
+            ],
+            "name": "SOAR integration",
+            "outputs": [
+              "executed remediation actions"
+            ],
+            "role": "executes remediation playbooks"
+          }
+        ],
+        "memory": {
+          "details": "No memory mechanism is described in the paper.",
+          "type": "unknown"
+        },
+        "models": [
+          {
+            "access": "unknown",
+            "name": "GAT + transformer",
+            "role": "anomaly detection"
+          },
+          {
+            "access": "unknown",
+            "name": "RL policy (PPO)",
+            "role": "hunt-path prioritization"
+          },
+          {
+            "access": "unknown",
+            "name": "LLM orchestrator",
+            "role": "orchestration"
+          },
+          {
+            "access": "unknown",
+            "name": "LLM critic",
+            "role": "reflection"
+          }
+        ],
+        "orchestration": "phased pipeline with a feedback loop: detect -> prioritize -> narrate -> execute via SOAR; the critic feeds lessons back into detectors and policies; micro-segmentation policy refreshed roughly every 90 seconds; high-stakes decisions reserved for human approval",
+        "paradigm": "agentic",
+        "tools": [
+          "SIEM (Splunk, Elastic)",
+          "SOAR",
+          "IDS/EDR"
+        ]
+      },
+      "authors": [
+        "Ajay Simha Rangappa"
+      ],
+      "evaluation": {
+        "baselines": [
+          "XGBoost",
+          "GAT-only",
+          "baseline SOAR"
+        ],
+        "datasets": [
+          "ETD-2024 (2.4M labeled events, 150 orgs)",
+          "SAPT-2024 (500 campaigns, 50 virtual environments)"
+        ],
+        "metrics": [
+          "precision",
+          "recall",
+          "F1",
+          "AUC-ROC",
+          "MTTD",
+          "MTTR",
+          "containment by ATT&CK phase",
+          "analyst trust"
+        ],
+        "reported_results": "F1 0.93 / AUC 0.98 vs XGBoost 0.77 (Table 1); MTTR reduced 45.1 to 7.8 minutes; containment by ATT&CK phase 97/89/91/88% vs baseline SOAR 68/51/39/42% (Table 2); analyst trust 72%",
+        "reproducible": "no"
+      },
+      "extraction_basis": "full-text",
+      "id": "doi-10.29121/DigiSecForensics.v2.i1.2025.86",
+      "input_modalities": [
+        "process execution chains",
+        "network telemetry",
+        "endpoint logs",
+        "authentication records",
+        "firewall alerts"
+      ],
+      "limitations": [
+        "No prompts, code, or artifacts published despite claiming a reproducible methodology",
+        "No hallucination guardrails described",
+        "Autonomous SOAR execution without a documented sandbox or read-only API posture",
+        "Black-box decision pathways; only 72% analyst trust even after SHAP/counterfactual exposure",
+        "Adversarial robustness untested; the paper's own literature review reports 78% of tested LLM defense policies bypassable via jailbreaks",
+        "Memory and retrieval strategy undefined"
+      ],
+      "links": {
+        "paper": "https://doi.org/10.29121/DigiSecForensics.v2.i1.2025.86"
+      },
+      "problem": "threat-hunting",
+      "review": {
+        "added_by": "@ahmedmaboud",
+        "date": "2026-10-03"
+      },
+      "schema_version": 1,
+      "short_name": "CyberAgentX",
+      "threat_intel_standards": [
+        "MITRE ATT&CK"
+      ],
+      "title": "Agentic AI and Cyber Security: Autonomous Threat Hunting, Intrusion Detection, and Adaptive Defense Mechanisms in a World of Increasingly Sophisticated Cyber Attacks",
+      "venue": "Journal of Digital Security and Forensics",
+      "year": 2025
+    }
+  ],
+  "relations": [],
+  "schema_version": 1
+}

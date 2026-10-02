@@ -113,7 +113,8 @@
         "problem": {
           "enum": [
             "threat-hunting", "cti-triage", "attack-mapping",
-            "incident-response", "detection-engineering"
+            "incident-response", "detection-engineering",
+            "vulnerability-discovery"
           ]
         },
         "input_modalities": { "$ref": "#/$defs/stringList" },

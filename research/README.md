@@ -36,7 +36,8 @@ pip install -r research/requirements.txt
 1. **Check it is not already here.** Search `papers/` by title and by arXiv
    id before you start.
 2. Copy `templates/paper.yaml` to `papers/<id>.yaml`. The filename stem must
-   equal the `id` field.
+   equal the `id` field — for `doi-…` ids, replace the `/` with `_` in the
+   stem (see [CONVENTIONS.md](CONVENTIONS.md)).
 3. Copy `templates/note.yaml` to `notes/<id>.yaml` using the same `<id>`.
 4. Fill both in. Cite section, table, or figure numbers where a claim comes
    from the paper.

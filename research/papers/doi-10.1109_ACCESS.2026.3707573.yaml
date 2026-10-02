@@ -1,0 +1,88 @@
+schema_version: 1
+
+id: doi-10.1109/ACCESS.2026.3707573
+short_name: "LLM agents for vuln discovery"
+title: "LLM-Based Intelligent Agents for Cybersecurity: A Tutorial and Survey of Automated Vulnerability Discovery"
+authors: ["Robel Addis", "Kiran Porter", "Jayden Ryan", "Micah Stull", "Shengjie Xu", "Paul Wagner", "Robert Honomichl", "Steven Forsyth"]
+year: 2026
+venue: "IEEE Access"
+links:
+  paper: "https://doi.org/10.1109/ACCESS.2026.3707573"
+
+extraction_basis: full-text
+
+problem: vulnerability-discovery
+input_modalities: ["source code", "web and API traffic", "binaries", "network traffic"]
+threat_intel_standards: [MITRE ATT&CK]
+
+architecture:
+  paradigm: agentic
+  components:
+    - name: Planner
+      role: "build and maintain the investigation plan"
+      inputs: ["tool observations", "task-tree constraints"]
+      outputs: ["ordered plan and subtasks"]
+      implementation: "reasoning-class LLM with plan-then-execute (PtE) and PS+ prompting, anchored to an ATT&CK-derived task tree"
+    - name: Executor agents
+      role: "run subtasks and call tools"
+      inputs: ["plan steps"]
+      outputs: ["tool results and observations"]
+      implementation: "cheap-model specialists (recon, scan, exploit, report) with wrappers such as nmap_scan(ip_address) and run_code(python_script)"
+    - name: Structured state
+      role: "track plan state between agents"
+      inputs: ["plan updates", "results"]
+      outputs: ["current state", "next actions"]
+      implementation: "finite-state machine / task graph / PTT / TCG (e.g., AutoPT FSM, PentestGPT PTT, VulnBot graph, xOffense TCG)"
+    - name: Deterministic verification layer
+      role: "check AI claims against real tools before use"
+      inputs: ["hypotheses and generated queries"]
+      outputs: ["verified or rejected findings"]
+      implementation: "static and dynamic analysis filters between agent output and tool execution"
+    - name: Human approval gate
+      role: "authorize destructive actions"
+      inputs: ["pending destructive action"]
+      outputs: ["approval or denial"]
+      implementation: "manual review plus enrollment scoping and rules of engagement"
+    - name: Memory
+      role: "provide long-term context"
+      inputs: ["past artifacts", "retrieval queries"]
+      outputs: ["retrieved context"]
+      implementation: "two-tier: context window plus vector DB/RAG with summarization, pruning, and HTML minification"
+  orchestration: "plan-then-execute loop with a reasoning-tier planner and cheap executors; per-stage tool-call and token budgets; checkpointed replanning on failure; deterministic verification between agent output and tool execution; human approval gates for destructive actions; sandboxed containers"
+  memory:
+    type: vector
+    details: "Two-tier memory: short-term context window plus long-term vector DB / RAG with summarization, pruning, and HTML minification; memory-poisoning risks highlighted."
+  tools: ["nmap", "sqlmap", "OWASP ZAP", "CodeQL", "Semgrep", "AFL", "libFuzzer", "MCP servers", "sandboxed containers (Docker/Kali, E2B, Daytona, Modal)"]
+  models:
+    - name: "Claude 4.5 Opus"
+      role: "reasoning"
+      access: api
+    - name: "Gemini 3 Pro"
+      role: "reasoning"
+      access: api
+    - name: "GPT-4"
+      role: "reasoning"
+      access: api
+    - name: "Llama-3-8B"
+      role: "planning under guided task tree"
+      access: open-weights
+
+evaluation:
+  datasets: ["Cybench", "NYU CTF Bench", "AutoPenBench", "InterCode-CTF", "CyberSecEval 3", "AgentDojo", "CTFExplorer", "HackTheBox (UnderPass)", "XBOW benchmark", "AIxCC finals"]
+  metrics: ["task completion", "F1", "precision", "recall", "cost per hunt", "latency", "vulnerabilities found/patched", "prompt-injection success"]
+  baselines: ["CodeQL", "self-guided (unanchored) agents", "stock (non-Kali) environments"]
+  reported_results: "NYU CTF Bench 2026: Claude 4.5 Opus 59%, Gemini 3 Pro 52%, +9.5 points with a Kali tool environment; AIxCC finalists found 54/63 (86%) synthetic vulnerabilities and patched 43 (68%) across 5.4M LoC plus 18 real-world vulnerabilities; IRIS found 55 vs CodeQL 27; guided task-tree completion 71.8-78.6% vs 13.5-16.5% self-guided; AutoPT $0.024/test, RapidPen $0.30-0.60/test"
+  reproducible: "partial"
+
+limitations:
+  - "CTF benchmarks do not equal production (authorization, rate limits, ambiguous success)"
+  - "Hallucination documented: invented file paths, misread forms, inferred nonexistent control flow"
+  - "Indirect prompt injection via untrusted page and log content; tool, memory, and RAG poisoning"
+  - "Containment imperfect in practice (shared kernels, metadata services; Clinejection incident hit ~4,000 developers)"
+  - "Context limits and lost-in-the-middle; retrieval failures can omit crucial evidence"
+  - "Reasoning-class model costs 5-20x per token"
+  - "Dual-use: scoped defensive prompts trivially repurposable"
+
+review:
+  added_by: "@ahmedmaboud"
+  date: "2026-10-03"
