@@ -1,0 +1,26 @@
+name: research
+
+on:
+  pull_request:
+    paths:
+      - "research/**"
+      - ".github/workflows/research.yml"
+  push:
+    branches: [main]
+    paths:
+      - "research/**"
+
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r research/requirements.txt
+      - name: Validate corpus
+        run: python research/scripts/validate.py
+      - name: Check generated files are current
+        run: python research/scripts/render.py --check

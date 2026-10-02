@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLM threat-hunting research corpus",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^(arxiv-[0-9]{4}\\.[0-9]{4,5}|doi-10\\.[0-9]{4,9}/[^\\s]+)$"
+    },
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "stringList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "stringOrUnknown": {
+      "anyOf": [{ "$ref": "#/$defs/nonEmptyString" }, { "const": "unknown" }]
+    },
+    "stringListOrUnknown": {
+      "anyOf": [{ "$ref": "#/$defs/stringList" }, { "const": "unknown" }]
+    },
+
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "relation"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "relation": {
+          "enum": ["supersedes", "extends", "contradicts", "same-authors"]
+        },
+        "note": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "role"],
+      "properties": {
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "role": { "$ref": "#/$defs/nonEmptyString" },
+        "inputs": { "$ref": "#/$defs/stringList" },
+        "outputs": { "$ref": "#/$defs/stringList" },
+        "implementation": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["none", "vector", "graph", "episodic", "hybrid", "unknown"]
+        },
+        "details": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "role"],
+      "properties": {
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "role": { "$ref": "#/$defs/nonEmptyString" },
+        "access": { "enum": ["open-weights", "api", "mixed", "unknown"] }
+      }
+    },
+
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added_by", "date"],
+      "properties": {
+        "added_by": { "type": "string", "pattern": "^@[A-Za-z0-9-]+$" },
+        "date": { "type": "string", "format": "date" },
+        "reviewers": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^@[A-Za-z0-9-]+$" }
+        }
+      }
+    },
+
+    "paper": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "id", "title", "authors", "year",
+        "extraction_basis", "problem", "architecture", "evaluation",
+        "limitations", "review"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "id": { "$ref": "#/$defs/id" },
+        "short_name": { "$ref": "#/$defs/nonEmptyString" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "authors": { "$ref": "#/$defs/stringList" },
+        "year": { "type": "integer", "minimum": 1990, "maximum": 2100 },
+        "venue": { "$ref": "#/$defs/nonEmptyString" },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["paper"],
+          "properties": {
+            "paper": { "type": "string", "format": "uri" },
+            "code": { "type": "string", "format": "uri" },
+            "data": { "type": "string", "format": "uri" }
+          }
+        },
+        "extraction_basis": {
+          "enum": ["full-text", "abstract-only", "cited-by", "third-party-summary"]
+        },
+        "problem": {
+          "enum": [
+            "threat-hunting", "cti-triage", "attack-mapping",
+            "incident-response", "detection-engineering"
+          ]
+        },
+        "input_modalities": { "$ref": "#/$defs/stringList" },
+        "threat_intel_standards": { "$ref": "#/$defs/stringList" },
+        "related": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/relation" }
+        },
+        "architecture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["paradigm", "components", "memory", "models"],
+          "properties": {
+            "paradigm": {
+              "enum": ["agentic", "rag", "fine-tuned", "prompting", "hybrid"]
+            },
+            "components": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/component" }
+            },
+            "orchestration": { "$ref": "#/$defs/nonEmptyString" },
+            "memory": { "$ref": "#/$defs/memory" },
+            "tools": { "$ref": "#/$defs/stringListOrUnknown" },
+            "models": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/model" }
+            }
+          }
+        },
+        "evaluation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["datasets", "reproducible"],
+          "properties": {
+            "datasets": { "$ref": "#/$defs/stringListOrUnknown" },
+            "metrics": { "$ref": "#/$defs/stringListOrUnknown" },
+            "baselines": { "$ref": "#/$defs/stringListOrUnknown" },
+            "reported_results": { "$ref": "#/$defs/nonEmptyString" },
+            "reproducible": {
+              "enum": ["yes", "no", "partial", "unknown"]
+            }
+          }
+        },
+        "limitations": { "$ref": "#/$defs/stringList" },
+        "review": { "$ref": "#/$defs/review" }
+      }
+    },
+
+    "note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "relevance_to_us"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "id": { "$ref": "#/$defs/id" },
+        "relevance_to_us": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "adopt": { "$ref": "#/$defs/stringList" },
+            "avoid": { "$ref": "#/$defs/stringList" },
+            "open_questions": { "$ref": "#/$defs/stringList" }
+          }
+        }
+      }
+    }
+  }
+}

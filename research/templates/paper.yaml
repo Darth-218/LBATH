@@ -1,0 +1,59 @@
+# Copy to research/papers/<id>.yaml. The filename stem must equal `id`.
+# Run `python research/scripts/validate.py` before opening a PR.
+# Replace every TODO before committing.
+schema_version: 1
+
+id: arxiv-2401.00000
+short_name: "TODO short name"     # optional; used as the label in COMPARISON.md
+title: "TODO paper title"
+authors: ["TODO"]
+year: 2024
+venue: "TODO"
+links:
+  paper: "https://arxiv.org/abs/2401.00000"
+  # code: "https://github.com/..."
+  # data: "https://..."
+
+extraction_basis: full-text       # full-text | abstract-only | cited-by | third-party-summary
+
+problem: threat-hunting           # threat-hunting | cti-triage | attack-mapping | incident-response | detection-engineering
+input_modalities: []
+# threat_intel_standards: [MITRE ATT&CK]
+
+# Author one direction only. render.py derives the inverse; validate.py
+# rejects back-edges.
+# related:
+#   - id: arxiv-2312.00000
+#     relation: extends            # supersedes | extends | contradicts | same-authors
+
+architecture:
+  paradigm: agentic               # agentic | rag | fine-tuned | prompting | hybrid
+  components:
+    - name: "TODO component"
+      role: "TODO what it does"
+      inputs: []
+      outputs: []
+      implementation: "TODO how, per the paper"
+  orchestration: "TODO control flow, step budget, stopping condition"
+  memory:
+    type: unknown                 # none | vector | graph | episodic | hybrid | unknown
+    details: "TODO"
+  tools: []                       # or: unknown
+  models:
+    - name: "TODO model"
+      role: "TODO reasoning | retrieval | extraction | ..."
+      access: unknown             # open-weights | api | mixed | unknown
+
+evaluation:
+  datasets: []                    # or: unknown
+  metrics: []                     # or: unknown
+  baselines: []
+  reported_results: "TODO headline numbers, with table/figure reference"
+  reproducible: unknown           # yes | no | partial | unknown
+
+# [] means the paper states none. Use [] rather than omitting the field.
+limitations: []
+
+review:
+  added_by: "@TODO"
+  date: 2026-10-02

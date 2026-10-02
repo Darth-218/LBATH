@@ -1,0 +1,10 @@
+# Copy to research/notes/<id>.yaml, where <id> matches a file in research/papers/.
+# This file holds opinion; the paper file holds extraction. They are separate
+# because the paper does not change when our system does.
+schema_version: 1
+id: arxiv-2401.00000
+
+relevance_to_us:
+  adopt: []
+  avoid: []
+  open_questions: []
