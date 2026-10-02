@@ -53,8 +53,13 @@ research/papers/doi-10.1109_ACCESS.2026.3707573.yaml
 ```
 
 The `id` field always keeps the true DOI; only the filename stem is escaped.
-`validate.py` applies the inverse escape (`_` → `/`) when matching stems, and
-arXiv ids pass through unchanged.
+`validate.py` applies the same escape to the `id` when checking it against the
+filename stem, and arXiv ids pass through unchanged.
+
+The escape is not injective in theory — a DOI containing both `/` and `_` can
+escape to a stem another id already uses. The corpus has no such id today; if
+one ever collides, that pair cannot coexist in `papers/`, so resolve it in
+review rather than bending the `id`.
 
 ### This rule also prevents duplicates
 

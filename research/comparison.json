@@ -346,7 +346,7 @@
           "vulnerabilities found/patched",
           "prompt-injection success"
         ],
-        "reported_results": "NYU CTF Bench 2026: Claude 4.5 Opus 59%, Gemini 3 Pro 52%, +9.5 points with a Kali tool environment; AIxCC finalists found 54/63 (86%) synthetic vulnerabilities and patched 43 (68%) across 5.4M LoC plus 18 real-world vulnerabilities; IRIS found 55 vs CodeQL 27; guided task-tree completion 71.8-78.6% vs 13.5-16.5% self-guided; AutoPT $0.024/test, RapidPen $0.30-0.60/test",
+        "reported_results": "NYU CTF Bench 2026: Claude 4.5 Opus 59%, Gemini 3 Pro 52%, +9.5 points with a Kali tool environment; AIxCC finalists found 54/63 (86%) synthetic vulnerabilities and patched 43 (68%) across 54M LoC, plus 18 previously unknown real-world vulnerabilities; IRIS found 55 vs CodeQL 27; guided task-tree completion 71.8-78.6% vs 13.5-16.5% self-guided; AutoPT $0.024/test, RapidPen $0.30-0.60/test",
         "reproducible": "partial"
       },
       "extraction_basis": "full-text",
