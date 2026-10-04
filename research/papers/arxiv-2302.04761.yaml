@@ -1,0 +1,74 @@
+schema_version: 1
+id: arxiv-2302.04761
+short_name: "Toolformer"
+title: "Toolformer: Language Models Can Teach Themselves to Use Tools"
+authors:
+  - Timo Schick
+  - Jane Dwivedi-Yu
+  - Roberto Dessi
+  - Roberta Raileanu
+  - Maria Lomeli
+  - Luke Zettlemoyer
+  - Nicola Cancedda
+  - Thomas Scialom
+year: 2023
+venue: "NeurIPS 2023"
+links:
+  paper: "https://arxiv.org/abs/2302.04761"
+  code: "https://github.com/facebookresearch/toolformer"
+
+extraction_basis: full-text
+problem: detection-engineering
+input_modalities: [text]
+threat_intel_standards: []
+
+related: []
+
+architecture:
+  paradigm: fine-tuned
+  components:
+    - name: API call sampler
+      role: "samples potential API calls from a pretrained LM using in-context prompts"
+      inputs: [text]
+      outputs: [candidate API calls]
+      implementation: "few-shot prompting with API-specific prompts"
+    - name: API executor
+      role: "executes API calls and returns results"
+      inputs: [API call]
+      outputs: [result]
+      implementation: "external tools (calculator, QA, search, MT, calendar)"
+    - name: filter
+      role: "filters API calls that reduce loss over future tokens"
+      inputs: [API call, result, text]
+      outputs: [filtered API calls]
+      implementation: "loss-based threshold"
+    - name: fine-tuning
+      role: "fine-tunes the LM on the augmented dataset"
+      inputs: [augmented dataset]
+      outputs: [fine-tuned model]
+      implementation: "standard language modeling objective"
+  orchestration: "single-step API calls interleaved with text; no chaining"
+  memory:
+    type: none
+  tools: ["calculator", "question answering", "Wikipedia search", "machine translation", "calendar"]
+  models:
+    - name: GPT-J 6.7B
+      role: base model
+      access: open-weights
+
+evaluation:
+  datasets: ["LAMA", "ASDiv", "SVAMP", "MAWPS", "Web Questions", "Natural Questions", "TriviaQA", "MLQA", "TEMPLAMA", "DATESET"]
+  metrics: ["accuracy", "EM", "perplexity"]
+  baselines: ["GPT-J", "GPT-J+CC", "OPT (66B)", "GPT-3 (175B)"]
+  reported_results: "Outperforms GPT-3 on several tasks; e.g., LAMA T-REx 53.5 vs 39.8; Math ASDiv 40.4 vs 14.0"
+  reproducible: yes
+
+limitations:
+  - "Cannot chain tools"
+  - "Not interactive (no multi-turn tool use)"
+  - "Sample-inefficient for some APIs"
+  - "Sensitive to prompt wording"
+
+review:
+  added_by: "@user"
+  date: 2026-10-04

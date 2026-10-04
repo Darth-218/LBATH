@@ -1,0 +1,71 @@
+schema_version: 1
+id: arxiv-2210.03629
+short_name: "ReAct"
+title: "ReAct: Synergizing Reasoning and Acting in Language Models"
+authors:
+  - Shunyu Yao
+  - Jeffrey Zhao
+  - Dian Yu
+  - Nan Du
+  - Izhak Shafran
+  - Karthik Narasimhan
+  - Yuan Cao
+year: 2023
+venue: "ICLR 2023"
+links:
+  paper: "https://arxiv.org/abs/2210.03629"
+  code: "https://github.com/ysymyth/ReAct"
+
+extraction_basis: full-text
+problem: detection-engineering
+input_modalities: [text]
+threat_intel_standards: []
+
+related: []
+
+architecture:
+  paradigm: prompting
+  components:
+    - name: thought generation
+      role: "generates reasoning traces to decompose goals, track progress, and handle exceptions"
+      inputs: [context]
+      outputs: [thought]
+      implementation: "few-shot prompting"
+    - name: action generation
+      role: "generates task-specific actions to interact with external environments"
+      inputs: [context, thought]
+      outputs: [action]
+      implementation: "few-shot prompting"
+    - name: environment interaction
+      role: "executes actions and returns observations"
+      inputs: [action]
+      outputs: [observation]
+      implementation: "external API or simulator"
+  orchestration: "interleaved thought-action-observation loop; dense thoughts for reasoning tasks, sparse thoughts for decision-making tasks"
+  memory:
+    type: episodic
+    details: "trajectory history (observations, actions, thoughts) kept in context window"
+  tools: ["Wikipedia API", "WebShop actions", "ALFWorld actions"]
+  models:
+    - name: PaLM-540B
+      role: base model
+      access: api
+    - name: GPT-3
+      role: base model
+      access: api
+
+evaluation:
+  datasets: ["HotPotQA", "FEVER", "ALFWorld", "WebShop"]
+  metrics: ["EM", "Accuracy", "Success Rate", "Score"]
+  baselines: ["Standard", "CoT", "Act", "CoT-SC", "BUTLER", "IL", "IL+RL"]
+  reported_results: "HotpotQA EM 27.4 (ReAct) vs 29.4 (CoT); ALFWorld success 71% vs 45% (Act); WebShop SR 40.0 vs 30.1 (Act)"
+  reproducible: yes
+
+limitations:
+  - "Performance depends on quality of in-context examples"
+  - "Struggles with large action spaces and long horizons"
+  - "Requires manual annotation of reasoning traces for few-shot prompts"
+
+review:
+  added_by: "@user"
+  date: 2026-10-04

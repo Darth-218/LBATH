@@ -1,0 +1,76 @@
+schema_version: 1
+id: arxiv-2303.11366
+short_name: "Reflexion"
+title: "Reflexion: Language Agents with Verbal Reinforcement Learning"
+authors:
+  - Noah Shinn
+  - Federico Cassano
+  - Edward Berman
+  - Ashwin Gopinath
+  - Karthik Narasimhan
+  - Shunyu Yao
+year: 2023
+venue: "NeurIPS 2023"
+links:
+  paper: "https://arxiv.org/abs/2303.11366"
+  code: "https://github.com/noahshinn024/reflexion"
+
+extraction_basis: full-text
+problem: detection-engineering
+input_modalities: [text]
+threat_intel_standards: []
+
+related: []
+
+architecture:
+  paradigm: prompting
+  components:
+    - name: Actor
+      role: "generates text and actions conditioned on state observations"
+      inputs: [state, memory]
+      outputs: [action, trajectory]
+      implementation: "LLM prompted with CoT or ReAct"
+    - name: Evaluator
+      role: "scores the outputs produced by the Actor"
+      inputs: [trajectory]
+      outputs: [reward]
+      implementation: "heuristics, exact match, or LLM-as-judge"
+    - name: Self-Reflection
+      role: "generates verbal feedback from sparse reward signals"
+      inputs: [trajectory, reward, memory]
+      outputs: [reflection]
+      implementation: "LLM prompted to summarize errors"
+    - name: Memory
+      role: "stores short-term trajectory and long-term reflections"
+      inputs: [reflection]
+      outputs: [context]
+      implementation: "bounded sliding window of reflections"
+  orchestration: "iterative trial loop: Actor acts, Evaluator scores, Self-Reflection produces feedback, memory updated; repeat until success or max trials"
+  memory:
+    type: episodic
+    details: "short-term: trajectory history; long-term: self-reflections, bounded to 1-3 experiences"
+  tools: ["code execution", "search APIs"]
+  models:
+    - name: GPT-4
+      role: base model
+      access: api
+    - name: GPT-3.5
+      role: base model
+      access: api
+
+evaluation:
+  datasets: ["ALFWorld", "HotPotQA", "HumanEval", "MBPP", "LeetcodeHardGym"]
+  metrics: ["Success Rate", "Accuracy", "Pass@1"]
+  baselines: ["ReAct", "CoT", "Baseline"]
+  reported_results: "ALFWorld 130/134 solved; HumanEval 91% pass@1 vs 80% GPT-4; HotPotQA +20% over baseline"
+  reproducible: yes
+
+limitations:
+  - "Relies on LLM's self-evaluation capability"
+  - "Can get stuck in local minima"
+  - "Limited long-term memory window"
+  - "Self-generated tests can be flaky"
+
+review:
+  added_by: "@user"
+  date: 2026-10-04
