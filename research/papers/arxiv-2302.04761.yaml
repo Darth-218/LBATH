@@ -61,7 +61,7 @@ evaluation:
   metrics: ["accuracy", "EM", "perplexity"]
   baselines: ["GPT-J", "GPT-J+CC", "OPT (66B)", "GPT-3 (175B)"]
   reported_results: "Outperforms GPT-3 on several tasks; e.g., LAMA T-REx 53.5 vs 39.8; Math ASDiv 40.4 vs 14.0"
-  reproducible: "yes"
+  reproducible: yes
 
 limitations:
   - "Cannot chain tools"
@@ -71,4 +71,4 @@ limitations:
 
 review:
   added_by: "@user"
-  date: "2026-10-04"
+  date: 2026-10-04
