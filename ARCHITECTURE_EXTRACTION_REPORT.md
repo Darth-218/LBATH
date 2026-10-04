@@ -73,4 +73,138 @@ Three functional domains (Figure 4):
 - **Grounded reasoning:** RAG + knowledge graphs reduce hallucinations
 - **Feedback-driven adaptation:** Trust updates based on performance, explainability, uncertainty
 
-[...continued in full report...]
+---
+
+## 2. Paper 2: Mahboubi et al. (2024) - "Evolving techniques in cyber threat hunting: A systematic review"
+
+**Source:** JNCA 232 (2024) 104004  
+**Type:** Systematic Literature Review (117 papers)  
+**Focus:** Threat hunting methodology, process, taxonomy
+
+### 2.1 Core Architecture (Process Model)
+
+The paper's most important architectural contribution is the **10-Step Systematic Process of Adaptive Threat Hunting** (Figure 2), derived from SANS maturity model:
+
+```text
+1. Ingestion of heterogeneous data sources (data lakes, logs)
+  → 2. Formulation of threat definitions & hypotheses
+    → 3. Proactive threat hunting (hypothesis-aligned search)
+      → 4. Employment of threat observation techniques (analysis/anomaly detection)
+        → 5. Classification of identified threats (clustering/characteristics)
+          → 6. Human validation of threats (MANDATORY GATE)
+            → 7. Assessment against prevention/detection (IDS/IPS/firewalls)
+              → 8. Extraction of threat signatures & patterns
+                → 9. Enhancement of detection & mitigation frameworks (ATT&CK/STIX)
+                  → 10. Iterative enhancement (feedback → back to step 2)
+```
+
+**Key Characteristic:** This is a **hypothesis-driven iterative loop** with mandatory human validation at step 6.
+
+### 2.2 Taxonomy of Architectural Approaches (Classification)
+
+The paper classifies threat hunting architectures into 6 categories (Figure 4):
+
+| Category | Architectural Style | Representative Systems | Key Components |
+|---|---|---|---|
+| **Supervised ML** | Pipeline (train → infer) | LSTM/CNN, ensemble, transformer/BiLSTM (DeepAG) | Feature extraction, classifiers, labeled datasets |
+| **Unsupervised ML** | Anomaly detection pipeline | LogAnomaly, LogUAD, autoencoders, UHAC, UN-AVOIDS | Embedding, reconstruction/error scoring, clustering |
+| **Reasoning** | Knowledge-driven | CCS (KG deduction), logic programming, game theory | Knowledge bases, inference engines, causal models |
+| **Graph-based** | Graph analytics | Poirot, DeepHunter (GNN), ANUBIS, Euler, AttackDB/AHG, THREATRACE, T-trace, Hopper | Provenance graphs, query graphs, knowledge graphs (KG), GNNs, path alignment |
+| **Rule-based** | Deterministic matching | SteinerLog, C-BEDIM/S-BEDIM, ProvTalk, HERCULE | Rule engines, signature DBs, pattern matchers |
+| **Other** | Hybrid/statistical | UEBA (SVD+Mahalanobis), MABAT (MAB), ELK+honeypots | Statistical models, bandit algorithms, behavioral analytics |
+
+### 2.3 Formal Hypothesis-Driven Architecture
+
+The paper proposes a mathematical foundation for hypothesis-driven hunting:
+
+- **HMM-based Attacker Model:** Hidden states = attack stages, observations = network effects (A, B, π matrices; forward/Viterbi)
+- **Anomaly Scoring:** $a(x_i)$ via Mahalanobis distance
+- **Threat Indicator Fusion:** $t(x_i)=1$ if $c(x_i)\cdot a(x_i) > \tau$ with $\tau^* = \arg\min_\tau\{\mu\cdot FPR(\tau) + (1-\mu)\cdot[1-TPR(\tau)]\}$
+- **Iterative Refinement:** $(M', c') = f(M,c,I)$ from investigation findings
+
+### 2.4 Key Architectural Insight
+**Hypothesis generation is the central, under-served component.** Most surveyed systems focus on detection/analysis but deprioritize automated hypothesis formulation (step 2). The loop is explicitly iterative with mandatory human validation.
+
+---
+
+## 3. Paper 3: Chona et al. (2026) - "Cyber Defense Benchmark: Agentic Threat Hunting Evaluation for LLMs in SecOps"
+
+**Source:** Simbian AI Technical Report v1.0, April 2026  
+**Type:** Benchmark + Agent Architecture  
+**Repo:** github.com/simbianai/cyber_defense_benchmark
+
+### 3.1 Agent Architecture
+
+The benchmark defines a **single-agent architecture**: `UniversalHunter` with a minimal, testable interface.
+
+```text
+Agent (UniversalHunter)
+  → HunterAction {reasoning, tool, sql_query, submitted_timestamps}
+    → HolodeckHuntEnv (Gymnasium)
+      → In-memory SQLite `logs` table (505 columns + raw_json, 4 indexes)
+        → Observation (briefing + last query + result OR error)
+          → Agent Loop (max 50 queries / 75 turns)
+```
+
+**Core Design Principle:** Deliberately minimal - SQL is the **only** tool interface (no RAG, no vector store, no external APIs). This isolates agent reasoning capability.
+
+### 3.2 Action Space
+
+The agent has exactly **3 actions**:
+
+| Action | Parameters | Purpose |
+|---|---|---|
+| `run_sql` | `sql_query` (string) | Execute SQL against logs table; returns ≤10 rows + full row count + error if any |
+| `submit_flags` | `submitted_timestamps` (array) | Submit candidate malicious event timestamps as evidence |
+| `give_up` | - | Explicit early termination |
+
+### 3.3 Reasoning Architecture
+
+- **Paradigm:** ReAct-style (Reasoning → Act → Observe)
+- **Structured Output:** JSON-schema constrained decoding for `HunterAction`
+- **Mandatory Reasoning:** `reasoning` field is required before every tool call (internal monologue)
+- **System Prompt:** Mission + full 505-column schema + pagination instructions + 3 available actions
+- **Context:** Conversation history is the **belief state** (short-term memory only)
+
+### 3.4 Key Architectural Constraints
+
+- **Read-only:** `run_sql` only; no write/execute capabilities (sandboxed by design)
+- **Budget-constrained:** 50-query budget, 1.5× safety cap (75 turns) - forces efficiency
+- **Error-resilient:** SQL errors surfaced in observation space (agent must self-correct within budget)
+- **Unprimed:** No guided questions, no alert seeding, no RAG - pure discovery from telemetry
+
+---
+
+## 4. Cross-Paper Architecture Synthesis
+
+### 4.1 Common Architectural Patterns
+
+| Aspect | Mohsin (2026) | Mahboubi (2024) | Chona (2026) |
+|---|---|---|---|
+| **Control Flow** | Feedback-driven adaptive loop with trust gates | Iterative 10-step hypothesis loop (mandatory human validation at step 6) | Turn-based ReAct loop with budget constraints |
+| **Reasoning** | CoT + RAG + Knowledge Graphs | Inductive/deductive + graph reasoning (survey) | ReAct with mandatory `reasoning` field (structured JSON) |
+| **Human-in-the-Loop** | Explicit tiers (HITL/HOtL/HOoTL), approval gates for major actions | Mandatory validation at step 6 of hunt process | Not present (benchmark only; read-only, no destructive actions) |
+| **Memory** | Short-term (current incident) + Long-term (ATT&CK/KG/threat feeds/history) | CTI knowledge bases, provenance graphs (long-term) | Short-term only (conversation history as belief state) |
+| **Grounding** | RAG + Knowledge Graphs (explicit) | KG/provenance graphs (recommended) | None (deliberately ungrounded - tests discovery) |
+| **Tool Interface** | SIEM (Wazuh), SOAR, Ticketing (Cydarm), Slack | Heterogeneous tools (SIEM/SOAR/EDR/CTI) | SQL-only (minimal interface) |
+
+### 4.2 Critical Architectural Gaps Identified
+
+From cross-paper analysis:
+1. **Hypothesis Generation (Step 2)** - Most under-served component (Mahboubi); Chona shows agents fail at spontaneous hypothesis generation (Credential Access/Initial Access blind spots)
+2. **Multi-Agent Orchestration** - All three primarily single-agent; Mohsin notes future work on agent teams
+3. **Error Recovery** - Chona surfaces errors but has no explicit retry/fallback policies; others don't specify
+4. **Tactic-Specific Knowledge** - Chona empirically shows domain-specific query knowledge missing (ATT&CK mapping failures)
+5. **Cross-Platform Telemetry** - All focus on Windows/event logs; limited coverage of Linux/cloud/network flows
+6. **Adversarial Robustness** - Named as risk (Mohsin) but never empirically tested
+
+---
+
+## 5. Conclusion
+
+The three papers present complementary architectural views:
+- **Mohsin** provides the **production-ready socio-technical architecture** with explicit trust/autonomy control and human oversight
+- **Mahboubi** provides the **canonical process architecture** (hypothesis-driven loop) and taxonomy of technical approaches
+- **Chona** provides the **minimal, testable agent architecture** with rigorous evaluation constraints
+
+Together, they define the architectural blueprint for building, evaluating, and deploying agentic threat hunting systems in SOC environments.
