@@ -1,0 +1,74 @@
+schema_version: 1
+
+id: arxiv-2504.05006
+short_name: "Fine-tuned DApp vuln detector"
+title: "Enhancing Smart Contract Vulnerability Detection in DApps Leveraging Fine-Tuned LLM"
+authors: ["Jiuyang Bu", "Wenkai Li", "Zongwei Li", "Zeng Zhang", "Xiaoqi Li"]
+year: 2025
+venue: "CoRR / arXiv:2504.05006"
+links:
+  paper: "https://arxiv.org/abs/2504.05006"
+
+extraction_basis: full-text
+
+problem: vulnerability-discovery
+input_modalities: ["Solidity smart-contract source code", "multi-contract DApp projects"]
+
+architecture:
+  paradigm: fine-tuned
+  components:
+    - name: SmartCollect project reconstruction
+      role: "collect real DApp projects and preserve cross-contract dependencies for training and testing"
+      inputs: ["audited DApp repositories and vulnerability reports"]
+      outputs: ["project-level Solidity dataset and labels"]
+      implementation: "Dataset covers 215 real-world DApp projects and 4,998 contracts collected from sources including Code4rena and SlowMist; methodology/data-collection section."
+    - name: Class-balancing stage
+      role: "reduce severe vulnerability-class imbalance before fine-tuning"
+      inputs: ["labeled training samples"]
+      outputs: ["balanced training set"]
+      implementation: "Random Over Sampling (ROS) duplicates minority-class examples before training; experimental setup."
+    - name: LLM fine-tuning
+      role: "adapt general-purpose open models to smart-contract vulnerability detection"
+      inputs: ["balanced smart-contract examples"]
+      outputs: ["domain-specialized model weights"]
+      implementation: "Full-Parameter Fine-Tuning (FFT) for Llama3-8B and Qwen2-7B; Qwen2-7B also evaluated with LoRA, adjusting attention Q/K/V projections; methodology."
+    - name: Auditor inference
+      role: "classify a contract/project and explain suspected vulnerabilities"
+      inputs: ["Solidity code", "auditor role prompt"]
+      outputs: ["vulnerability finding"]
+      implementation: "Role-prompted inference using the fine-tuned model; no retrieval or tool-use loop."
+    - name: Verifier inference
+      role: "review the auditor's candidate finding to reduce false positives"
+      inputs: ["candidate finding", "contract context", "verifier role prompt"]
+      outputs: ["verified finding"]
+      implementation: "Second prompted pass using a verifier role; still a fixed inference pipeline rather than an autonomous agent loop."
+  orchestration: "Offline data preparation and supervised adaptation are followed by a fixed auditor -> verifier inference pipeline. The paper's contribution is weight adaptation (FFT/LoRA); inference does not use retrieval, external tools, or model-directed iterative actions, so it is classified as fine-tuned under the repository convention."
+  memory:
+    type: none
+    details: "No persistent retrieval, graph, or episodic memory is used at inference time."
+  tools: ["SmartCollect", "Random Over Sampling (ROS)", "Full-Parameter Fine-Tuning (FFT)", "LoRA"]
+  models:
+    - name: "Llama3-8B"
+      role: "fine-tuned vulnerability detector / auditor"
+      access: open-weights
+    - name: "Qwen2-7B"
+      role: "fine-tuned vulnerability detector / auditor"
+      access: open-weights
+
+evaluation:
+  datasets: ["215 real-world DApp projects (4,998 contracts)", "23 contracts with token-price-manipulation vulnerabilities"]
+  metrics: ["precision", "recall", "F1"]
+  baselines: ["Qwen2-7B prompt-only", "GPTLENS", "GPTSCAN", "LoRA vs full-parameter fine-tuning"]
+  reported_results: "With ROS, Llama3 FFT reaches precision 0.84, recall 0.79, F1 0.83; Qwen2 FFT-ROS reaches precision 0.85, recall 0.80, F1 0.82. For token-price manipulation, Llama3 FFT reports precision 0.97 and recall 0.68. The paper also reports that prompt-only Qwen2 performs far worse (F1 0.20), supporting the value of domain fine-tuning."
+  reproducible: partial
+
+limitations:
+  - "The dataset is specific to Solidity/DApp security, so transfer to operating-system, network, or SOC threat-hunting telemetry is not established."
+  - "The key token-price-manipulation evaluation contains only 23 vulnerable contracts, limiting confidence for that rare logical-flaw class."
+  - "Random over-sampling duplicates minority examples and can increase overfitting risk even when it improves class balance."
+  - "The inference pipeline has no retrieval or external verification tool, so correctness remains dependent on the specialized model and verifier prompt."
+  - "LoRA is cheaper but underperforms full-parameter fine-tuning in the reported experiments, exposing an accuracy-versus-training-cost trade-off."
+
+review:
+  added_by: "@lBebol"
+  date: "2026-10-04"

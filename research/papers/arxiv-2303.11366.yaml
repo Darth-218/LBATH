@@ -63,7 +63,7 @@ evaluation:
   metrics: ["Success Rate", "Accuracy", "Pass@1"]
   baselines: ["ReAct", "CoT", "Baseline"]
   reported_results: "ALFWorld 130/134 solved; HumanEval 91% pass@1 vs 80% GPT-4; HotPotQA +20% over baseline"
-  reproducible: yes
+  reproducible: "yes"
 
 limitations:
   - "Relies on LLM's self-evaluation capability"
@@ -73,4 +73,4 @@ limitations:
 
 review:
   added_by: "@user"
-  date: 2026-10-04
+  date: "2026-10-04"

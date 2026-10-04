@@ -1,0 +1,84 @@
+schema_version: 1
+
+id: doi-10.3390/electronics15122740
+short_name: "Agentic IoT security survey"
+title: "Agentic AI and Large Language Models for Autonomous IoT Cybersecurity: A Systematic Survey, Taxonomy, and Research Roadmap"
+authors: ["Vinoth Nageshwaran", "Soundararajan Ezekiel"]
+year: 2026
+venue: "Electronics 2026, 15, 2740"
+links:
+  paper: "https://doi.org/10.3390/electronics15122740"
+  code: "https://github.com/vnageshwaran-de/agentic-iot-security"
+
+extraction_basis: full-text
+
+problem: threat-hunting
+input_modalities: ["IoT network telemetry", "packet captures", "security logs", "threat intelligence", "tool observations"]
+threat_intel_standards: ["MITRE ATT&CK"]
+
+architecture:
+  paradigm: agentic
+  components:
+    - name: Prompt and policy layer
+      role: "scope the security task and constrain what the agent may do"
+      inputs: ["security objective", "action scope", "safety policy"]
+      outputs: ["agent instructions and guardrails"]
+      implementation: "Companion kit prompt templates for detection, response, threat hunting, and vulnerability discovery; Section 10.3."
+    - name: Single-agent ReAct loop
+      role: "iteratively gather evidence, reason, call tools, and decide when to terminate"
+      inputs: ["telemetry", "tool observations", "task prompt"]
+      outputs: ["hypotheses", "tool calls", "findings or actions"]
+      implementation: "Perception -> thought -> tool invocation -> observation -> termination, with OpenAI-compatible, Claude, or local llama.cpp adapters; Sections 5.2.2 and 10.3."
+    - name: Multi-agent coordinator
+      role: "coordinate specialist security agents when one loop is insufficient"
+      inputs: ["specialist messages", "shared task state"]
+      outputs: ["role assignments", "handoffs", "aggregate result"]
+      implementation: "Pipeline, debate, and blackboard coordination patterns over a shared message bus with explicit roles and hand-offs; Section 10.3."
+    - name: Tool registry
+      role: "provide typed interfaces from agents to security systems"
+      inputs: ["structured tool call"]
+      outputs: ["sanitized tool result"]
+      implementation: "Canonical schemas for SIEM query, packet sniffing, MITRE lookup, device isolation, and threat-feed lookup; Section 10.3."
+    - name: Safety and observability layer
+      role: "sanitize inter-agent traffic and make agent behavior auditable"
+      inputs: ["agent handoffs", "tool calls", "outputs"]
+      outputs: ["sanitized messages", "trace records", "approval/escalation signals"]
+      implementation: "Sanitization boundaries, structured tracing, action allow-lists, confidence thresholds, and human escalation; Sections 8 and 10.3."
+    - name: Evaluation harness
+      role: "measure agent accuracy, latency, and prompt-injection susceptibility"
+      inputs: ["Edge-IIoTset-style flows", "real Edge-IIoTset samples", "injection prompts"]
+      outputs: ["accuracy/F1", "latency", "robustness results"]
+      implementation: "JSON/CSV harness released with deterministic stub mode; the paper explicitly labels it illustrative scaffolding rather than a validated production framework; Sections 6 and 10."
+  orchestration: "Reference architecture supports a single-agent ReAct loop or a multi-agent coordinator using pipeline, debate, or blackboard patterns. Tool calls pass through typed registries and sanitization boundaries; high-risk actions can be gated by confidence thresholds and human approval. The authors explicitly state that the released implementation is illustrative scaffolding, not a validated production framework (Section 10)."
+  memory:
+    type: unknown
+    details: "The paper discusses shared message buses and conversational context but does not specify one persistent memory mechanism for the reference implementation."
+  tools: ["SIEM query", "packet sniff", "MITRE lookup", "device isolate", "threat-feed lookup"]
+  models:
+    - name: "OpenAI-compatible LLM"
+      role: "reasoning / ReAct agent"
+      access: api
+    - name: "Anthropic Claude"
+      role: "reasoning / ReAct agent"
+      access: api
+    - name: "local llama.cpp model"
+      role: "local reasoning adapter"
+      access: open-weights
+
+evaluation:
+  datasets: ["synthetic Edge-IIoTset-style traffic", "Edge-IIoTset negative-control sample", "25-pattern prompt-injection probe corpus"]
+  metrics: ["accuracy", "F1", "end-to-end decision latency", "prompt-injection susceptibility"]
+  baselines: ["deterministic stub on synthetic traffic", "deterministic stub on real Edge-IIoTset sample"]
+  reported_results: "The shipped validation run is a harness sanity check, not an LLM capability result: the deterministic stub reports F1 0.83 on synthetic traffic; a negative-control transfer drops accuracy from 0.78 on synthetic data to 0.06 on real Edge-IIoTset. The paper defers real-model production validation (Sections 2.4, 6, and 10.3)."
+  reproducible: partial
+
+limitations:
+  - "The paper is a systematic survey plus reference scaffold, not one empirically validated end-to-end security architecture."
+  - "The shipped harness validation uses a deterministic stub rather than an LLM agent, so its scores cannot be treated as agent capability evidence."
+  - "The synthetic-to-real negative control shows a major generalization gap (0.78 to 0.06 accuracy)."
+  - "Real-model evaluation across accuracy, latency, robustness, and prompt injection is deferred to staged future validation."
+  - "The survey literature is heterogeneous across datasets, attack taxonomies, and deployment assumptions, limiting direct quantitative comparison."
+
+review:
+  added_by: "@lBebol"
+  date: "2026-10-04"

@@ -1,0 +1,92 @@
+schema_version: 1
+
+id: arxiv-2604.19533
+short_name: "Cyber Defense Benchmark"
+title: "Cyber Defense Benchmark: Agentic Threat Hunting Evaluation for LLMs in SecOps"
+authors: ["Alankrit Chona", "Igor Kozlov", "Ambuj Kumar"]
+year: 2026
+venue: "Simbian AI Technical Report v1.0 / arXiv:2604.19533"
+links:
+  paper: "https://arxiv.org/abs/2604.19533"
+  code: "https://github.com/simbianai/cyber_defense_benchmark"
+
+extraction_basis: full-text
+
+problem: threat-hunting
+input_modalities: ["Windows Event Logs", "Sysmon telemetry", "Security logs", "SQLite query results"]
+threat_intel_standards: ["MITRE ATT&CK", "Sigma"]
+
+architecture:
+  paradigm: agentic
+  components:
+    - name: Campaign builder
+      role: "compose multi-procedure attack campaigns while preventing trivial memorization"
+      inputs: ["OTRF Security-Datasets attack procedures", "campaign seed"]
+      outputs: ["time-shifted and entity-obfuscated campaign logs"]
+      implementation: "Deterministic campaign simulator time-shifts recordings, rewrites entities, and combines procedures; Section 4."
+    - name: Log environment
+      role: "expose raw telemetry to the hunter through a constrained query surface"
+      inputs: ["campaign logs", "synthetic benign noise"]
+      outputs: ["SQLite rows or query errors"]
+      implementation: "In-memory SQLite with one flat logs table, 505 exposed schema columns, indexed host/user/event fields, and at most 10 rows returned per query; Section 4.3."
+    - name: UniversalHunter LLM agent
+      role: "form hypotheses, choose SQL queries, inspect evidence, and decide when to submit findings"
+      inputs: ["mission", "schema", "conversation history", "latest query result"]
+      outputs: ["structured HunterAction"]
+      implementation: "Zero-shot LLM agent with three structured actions: run_sql, submit_flags, and give_up; models accessed through LiteLLM; Section 4.4."
+    - name: Budget controller
+      role: "bound open-ended investigation cost and runaway loops"
+      inputs: ["query count", "agent turn count"]
+      outputs: ["continue or truncate"]
+      implementation: "50 SQL-query budget and 75-turn safety cap; Section 8.2."
+    - name: Hidden-ground-truth evaluator
+      role: "score whether submitted evidence covers the attack narrative"
+      inputs: ["submitted timestamps", "Sigma-derived malicious flags", "narrative steps"]
+      outputs: ["Coverage Score", "flag recall", "per-tactic coverage", "cost and token metrics"]
+      implementation: "Ground truth is hidden from the hunter; Coverage Score is the instance-weighted fraction of coverable narrative steps surfaced; Sections 3.2 and 8.3."
+  orchestration: "ReAct-like evidence-gathering loop: the LLM repeatedly chooses run_sql, observes up to 10 rows, updates its hypothesis in conversation history, and either queries again, submits candidate malicious timestamps, or gives up. Investigation is capped at 50 SQL queries and 75 total turns; the evaluator alone sees the hidden ground truth."
+  memory:
+    type: episodic
+    details: "The current briefing, prior actions, latest query, and result/error are carried in the agent conversation state; no vector store or RAG memory is used."
+  tools: ["SQLite", "LiteLLM", "Gymnasium", "Chainsaw", "Sigma rules"]
+  models:
+    - name: "Claude Opus 4.6"
+      role: "threat-hunting agent"
+      access: api
+    - name: "Claude Sonnet 4.6"
+      role: "threat-hunting agent"
+      access: api
+    - name: "GPT-5"
+      role: "threat-hunting agent"
+      access: api
+    - name: "Gemini 3.1 Pro Preview"
+      role: "threat-hunting agent"
+      access: api
+    - name: "Kimi K2.6"
+      role: "threat-hunting agent"
+      access: api
+    - name: "Qwen3.6 Plus"
+      role: "threat-hunting agent"
+      access: api
+    - name: "DeepSeek V3.2"
+      role: "threat-hunting agent"
+      access: api
+
+evaluation:
+  datasets: ["106 OTRF Security-Datasets attack procedures", "26 deterministic multi-procedure benchmark campaigns", "500 synthetic benign Sysmon EventID-1 records per campaign"]
+  metrics: ["Coverage Score", "correct flags submitted", "flags observed in query results", "per-tactic recall", "USD cost", "token usage", "agent turns"]
+  baselines: ["same zero-shot UniversalHunter prompt and query budget across evaluated frontier models"]
+  reported_results: "Technical Report v1 evaluates 859 hunt runs. Claude Opus 4.6 leads with Coverage Score 0.55±0.05 and 4.48%±1.40% malicious flags found; no model meets the paper's operational bar of >=50% recall on every ATT&CK tactic, and no model completes a hunt. The benchmark spans 106 procedures, 93 ATT&CK sub-techniques, and 12 tactics (Tables 2 and 5; Sections 8-9)."
+  reproducible: partial
+
+limitations:
+  - "Several models are evaluated with a single rollout despite high LLM nondeterminism; the authors recommend multi-rollout averaging."
+  - "All attack telemetry is Windows-only; Linux auditd, cloud telemetry, and network-flow hunting are not covered."
+  - "Only 500 synthetic benign Sysmon EventID-1 records are injected, far below production SOC noise volume."
+  - "Exact timestamp matching is intentionally strict and does not award partial credit for coarse but useful investigative localization."
+  - "All evaluated hunters are zero-shot; trained or retrieval-augmented agents are outside this version's evaluation."
+  - "The campaign generator is proprietary, although pre-built campaign data and full hunt traces are released."
+
+review:
+  added_by: "@lBebol"
+  date: "2026-10-04"
