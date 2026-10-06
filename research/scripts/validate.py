@@ -25,6 +25,8 @@ from pathlib import Path
 try:
     import yaml
     from jsonschema import Draft202012Validator, FormatChecker
+    from referencing import Registry
+    from referencing.jsonschema import DRAFT202012
 except ImportError as exc:  # pragma: no cover
     sys.exit(
         f"missing dependency: {exc.name}\n"
@@ -44,6 +46,8 @@ FORWARD_RELATIONS = {"supersedes", "extends", "contradicts", "same-authors"}
 # Relations where a back-edge is a genuine contradiction rather than
 # redundant symmetry.
 ASYMMETRIC_RELATIONS = {"supersedes", "extends"}
+
+ROOT_URI = "urn:lbath:schema"
 
 # Id prefixes the schema accepts. A `todo-` id is a placeholder: the entry is
 # structurally valid, but its identifier has not been assigned yet.
@@ -113,8 +117,13 @@ def explain(error) -> str:
     return err.message
 
 
-def check_schema(data, schema, path: Path, report: Report) -> bool:
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+def check_schema(data, definition_id: str, schema: dict, path: Path, report: Report) -> bool:
+    registry = Registry().with_resource(ROOT_URI, DRAFT202012.create_resource(schema))
+    validator = Draft202012Validator(
+        {"$ref": f"{ROOT_URI}#/$defs/{definition_id}"},
+        registry=registry,
+        format_checker=FormatChecker(),
+    )
     errors = sorted(validator.iter_errors(data), key=lambda e: list(e.absolute_path))
     for err in errors:
         loc = "$" + "".join(
@@ -124,7 +133,7 @@ def check_schema(data, schema, path: Path, report: Report) -> bool:
     return not errors
 
 
-def load_entries(directory: Path, schema, report: Report) -> tuple[dict, dict]:
+def load_entries(directory: Path, definition_id: str, schema: dict, report: Report) -> tuple[dict, dict]:
     """Return ({id: data}, {id: path}) for every valid entry in `directory`."""
     entries: dict = {}
     paths: dict = {}
@@ -133,7 +142,7 @@ def load_entries(directory: Path, schema, report: Report) -> tuple[dict, dict]:
         data = load(path, report)
         if data is None:
             continue
-        if not check_schema(data, schema, path, report):
+        if not check_schema(data, definition_id, schema, path, report):
             continue
 
         entry_id = data["id"]
@@ -241,8 +250,8 @@ def main() -> int:
             print(f"missing directory: {_display(directory)}", file=sys.stderr)
             return 1
 
-    papers, paper_paths = load_entries(PAPERS_DIR, defs["paper"], report)
-    notes, note_paths = load_entries(NOTES_DIR, defs["note"], report)
+    papers, paper_paths = load_entries(PAPERS_DIR, "paper", schema, report)
+    notes, note_paths = load_entries(NOTES_DIR, "note", schema, report)
 
     check_relations(papers, paper_paths, report)
     check_notes(notes, note_paths, papers, report)

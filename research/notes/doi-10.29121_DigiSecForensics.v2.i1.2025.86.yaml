@@ -9,7 +9,7 @@ relevance_to_us:
   avoid:
     - "Full, unsandboxed SOAR execution autonomy (we keep read-only defaults plus human approval)"
     - "Opaque decision pathways without evidence references (analyst trust was only 72%)"
-    - "Documenting a framework without publishing prompts or code (reproducible: "no")"
+    - "Documenting a framework without publishing prompts or code (reproducible: no)"
   open_questions:
     - "How to budget the critic so the reflection loop cannot spin forever?"
     - "Which ATT&CK-stage containment granularity maps cleanly onto our adaptive windows?"
