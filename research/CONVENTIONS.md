@@ -32,15 +32,57 @@ the same PR, not to guess.
 IDs are stable keys, not display names. Every `related` reference points at
 one, and it should not change.
 
-Use `arxiv-2401.12345` when the paper has an arXiv id. Fall back to
-`doi-10.xxxx/yyyy` only when it does not. **Prefer arXiv over DOI when both
-exist.**
+An id is a **registered prefix** followed by that source's own identifier. The
+schema accepts exactly four prefixes; an id with anything else fails
+validation.
 
-Slugs (`rag-cti-hunting-2024`) are not allowed. They drift when a title
+| Prefix | Form | Use for |
+| --- | --- | --- |
+| `arxiv-` | `arxiv-2401.12345` | papers that have an arXiv id |
+| `doi-` | `doi-10.xxxx/yyyy` | papers that have a DOI but no arXiv id |
+| `url-` | `url-usenix.org/usenixsec24/presentation-lee` | papers with neither — only a canonical landing page |
+| `todo-` | `todo-llm-nids-survey` | drafts whose identifier is not known yet |
+
+**Prefer arXiv over DOI, and DOI over URL, when more than one exists.** The
+same paper must not get two entries under two different prefixes.
+
+### Prefixes are not slugs
+
+A bare slug (`rag-cti-hunting-2024`) is not an id. Slugs drift when a title
 changes or when naming taste differs, and the drift is invisible — nothing
-fails, references just quietly stop resolving.
+fails, references just quietly stop resolving. The part *after* a registered
+prefix is not a name you invent: it is the source's identifier, so that failure
+mode stays out of the corpus.
+
+`todo-` is the one exception, and it is temporary. `validate.py` warns on every
+placeholder id; replace it with the real `arxiv-`, `doi-`, or `url-` id as soon
+as the paper's identifier is known. The slug after `todo-` only has to be
+unique and descriptive, because nothing should ever reference it for long.
+
+`url-` ids drop the scheme — write `url-usenix.org/...`, not
+`url-https://usenix.org/...` — and use the canonical landing page: lowercase
+host, no port, no query string, no `#fragment`. `:` and `?` are excluded by the
+schema because they would land in a filename.
 
 The readable name goes in `short_name`. That is what `COMPARISON.md` displays.
+
+### Ids containing `/`
+
+`doi-` and `url-` ids contain `/`, which cannot appear in a filename. Store the
+entry with the stem escaping `/` as `_`; the `id` field keeps the true
+identifier:
+
+```sh
+# id: doi-10.1109/ACCESS.2026.3707573
+research/papers/doi-10.1109_ACCESS.2026.3707573.yaml
+```
+
+`validate.py` applies the same escape before comparing `id` to the filename
+stem (`expected_stem`), and `arxiv-`/`todo-` ids pass through unchanged.
+
+The escape is not injective — an id containing both `/` and `_` can escape to a
+stem another id already uses. If such a pair ever collides they cannot coexist
+in `papers/`, so resolve it in review rather than bending the `id`.
 
 ### This rule also prevents duplicates
 

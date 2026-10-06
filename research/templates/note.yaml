@@ -1,4 +1,5 @@
 # Copy to research/notes/<id>.yaml, where <id> matches a file in research/papers/.
+# The id must use the same prefix as the paper file: arxiv-, doi-, url-, todo-.
 # This file holds opinion; the paper file holds extraction. They are separate
 # because the paper does not change when our system does.
 schema_version: 1

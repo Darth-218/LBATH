@@ -1,9 +1,14 @@
-# Copy to research/papers/<id>.yaml. The filename stem must equal `id`.
+# Copy to research/papers/<id>.yaml. The filename stem must equal `id`;
+# for doi-… and url-… ids, replace `/` with `_` in the stem.
+# Ids take one of four prefixes — arxiv-, doi-, url-, or the temporary
+# todo- placeholder (validate.py warns on it). See CONVENTIONS.md §IDs.
 # Run `python research/scripts/validate.py` before opening a PR.
 # Replace every TODO before committing.
 schema_version: 1
 
 id: arxiv-2401.00000
+# or: id: doi-10.xxxx/yyyy      # stem: doi-10.xxxx_yyyy
+# or: id: url-usenix.org/path   # stem: url-usenix.org_path
 short_name: "TODO short name"     # optional; used as the label in COMPARISON.md
 title: "TODO paper title"
 authors: ["TODO"]

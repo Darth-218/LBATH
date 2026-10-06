@@ -4,7 +4,8 @@
 Checks, in order:
   1. Every file parses as YAML and is a mapping.
   2. Every entry conforms to schema.json.
-  3. The filename stem matches the entry's `id`.
+  3. The filename stem matches the entry's `id` (DOI and URL `/` escaped as
+     `_`; see expected_stem).
   4. No duplicate ids across papers/.
   5. Every notes/<id>.yaml has a matching papers/<id>.yaml.
   6. Every `related[].id` resolves to a known paper.
@@ -43,6 +44,20 @@ FORWARD_RELATIONS = {"supersedes", "extends", "contradicts", "same-authors"}
 # Relations where a back-edge is a genuine contradiction rather than
 # redundant symmetry.
 ASYMMETRIC_RELATIONS = {"supersedes", "extends"}
+
+# Id prefixes the schema accepts. A `todo-` id is a placeholder: the entry is
+# structurally valid, but its identifier has not been assigned yet.
+PLACEHOLDER_PREFIX = "todo-"
+
+
+def expected_stem(entry_id: str) -> str:
+    """Filesystem-safe stem for an id.
+
+    Only `doi-` and `url-` ids contain `/`, which cannot appear in a filename;
+    it is escaped as `_`. `arxiv-` and `todo-` ids are already filename-safe and
+    pass through unchanged. The `id` field always keeps the true identifier.
+    """
+    return entry_id.replace("/", "_")
 
 
 class Report:
@@ -122,9 +137,15 @@ def load_entries(directory: Path, schema, report: Report) -> tuple[dict, dict]:
             continue
 
         entry_id = data["id"]
-        if entry_id != path.stem:
+        if expected_stem(entry_id) != path.stem:
             report.error(
                 path, f"id {entry_id!r} does not match filename stem {path.stem!r}"
+            )
+        if entry_id.startswith(PLACEHOLDER_PREFIX):
+            report.warn(
+                path,
+                f"placeholder id {entry_id!r}; replace it with the paper's "
+                "arxiv-, doi-, or url- id before citing it",
             )
         if entry_id in entries:
             report.error(
