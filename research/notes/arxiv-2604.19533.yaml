@@ -1,0 +1,15 @@
+schema_version: 1
+id: arxiv-2604.19533
+relevance_to_us:
+  adopt:
+    - "Give the hunting agent a narrow, structured, read-only query tool with explicit result limits and investigation budgets."
+    - "Separate the hunter from hidden ground truth and score narrative/tactic coverage, not only whether it produced a plausible final answer."
+    - "Store full tool-call traces, observations, token cost, and evidence discovery so a hunt is auditable and reproducible."
+  avoid:
+    - "Using exact timestamp submission as the only production success criterion; our system should also preserve evidence and attribution quality."
+    - "Assuming an SQL-only, no-RAG tool surface is sufficient once we add CTI, ATT&CK knowledge, and heterogeneous Wazuh/Zeek telemetry."
+    - "Treating current frontier LLMs as safe for unsupervised deployment; the benchmark explicitly shows they miss most malicious events."
+  open_questions:
+    - "How should the UniversalHunter query loop map to Wazuh/OpenSearch and Zeek instead of a single SQLite table?"
+    - "Should our evaluator score event recall, ATT&CK-step coverage, evidence quality, or a weighted combination?"
+    - "Do we evaluate open-ended hunts only, or also alert-seeded investigations where the agent pivots from one known signal?"

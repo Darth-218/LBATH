@@ -1,0 +1,16 @@
+schema_version: 1
+id: arxiv-2603.23966
+
+relevance_to_us:
+  adopt:
+    - "Gated DRL + autoencoder funnel that cuts LLM workload (~63-65%)"
+    - "Pseudonymization boundary with a reversible SOC-side mapping before any LLM call"
+    - "Verbatim role prompts (Senior SOC Triage Analyst, Threat Intelligence Analyst) as the prompting contract"
+    - "Cost/regret framing for evaluation, including robustness to drift (mode D)"
+  avoid:
+    - "Fixed 5-minute windows (we use adaptive windows)"
+    - "Binary Allow/Contain action space (we add Monitor)"
+    - "No-RAG, funneling-only context (v2 adds RAG behind an interface)"
+  open_questions:
+    - "Adaptive window sizing rules for short-lived attacks?"
+    - "How to map the priority score onto analyst queue ordering?"

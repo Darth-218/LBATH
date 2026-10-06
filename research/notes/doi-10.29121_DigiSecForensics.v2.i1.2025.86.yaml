@@ -1,0 +1,15 @@
+schema_version: 1
+id: doi-10.29121/DigiSecForensics.v2.i1.2025.86
+
+relevance_to_us:
+  adopt:
+    - "Critic / reflective loop that reviews past actions and adjusts future strategy"
+    - "RL-based hunt-path prioritization pattern feeding our L1 gate design"
+    - "ATT&CK-phase containment evaluation framing"
+  avoid:
+    - "Full, unsandboxed SOAR execution autonomy (we keep read-only defaults plus human approval)"
+    - "Opaque decision pathways without evidence references (analyst trust was only 72%)"
+    - "Documenting a framework without publishing prompts or code (reproducible: "no")"
+  open_questions:
+    - "How to budget the critic so the reflection loop cannot spin forever?"
+    - "Which ATT&CK-stage containment granularity maps cleanly onto our adaptive windows?"

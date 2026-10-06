@@ -1,0 +1,96 @@
+schema_version: 1
+
+id: arxiv-2603.23966
+short_name: "Splunk SOC triage"
+title: "Policy-Guided Threat Hunting: An LLM enabled Framework with Splunk SOC Triage"
+authors: ["Rishikesh Sahay", "Bell Eapen", "Weizhi Meng", "Md Rasel Al Mamun", "Nikhil Kumar Dora", "Manjusha Sumasadan", "Sumit Kumar Tetarave", "Elyson De La Cruz"]
+year: 2026
+venue: "arXiv preprint arXiv:2603.23966"
+links:
+  paper: "https://arxiv.org/abs/2603.23966"
+
+extraction_basis: full-text
+
+problem: threat-hunting
+input_modalities: ["network flow logs", "IDS alerts"]
+threat_intel_standards: [MITRE ATT&CK]
+
+architecture:
+  paradigm: agentic
+  components:
+    - name: SIEM indexing
+      role: "collect and index security logs"
+      inputs: ["raw logs from endpoints and IDS"]
+      outputs: ["indexed events"]
+      implementation: "Splunk Enterprise with Splunk Universal Forwarder"
+    - name: Data cleaning and feature extraction
+      role: "deduplicate events and build windowed features"
+      inputs: ["indexed events"]
+      outputs: ["per-window feature vectors"]
+      implementation: "fixed 5-minute windows; mean/max of ports and bytes, IPs, protocol"
+    - name: Autoencoder anomaly detector
+      role: "score how unusual a window is"
+      inputs: ["window features"]
+      outputs: ["anomaly score"]
+      implementation: "reconstruction autoencoder |F|->8->2->8->|F|, MSE error, trained benign-only on the first 25% of the timeline"
+    - name: DRL triage policy
+      role: "decide Allow vs Contain per window"
+      inputs: ["window features (anomaly score excluded)"]
+      outputs: ["action with confidence"]
+      implementation: "PPO-trained 2x64 MLP with ReLU and softmax"
+    - name: Triage and prioritization
+      role: "gate which windows reach the LLM"
+      inputs: ["policy action", "anomaly score"]
+      outputs: ["priority-flagged windows"]
+      implementation: "priority = action x score; forward only when above threshold (5)"
+    - name: LLM multi-agent layer
+      role: "produce risk assessment, SPL queries, and ATT&CK mapping"
+      inputs: ["escalated windows"]
+      outputs: ["triage report", "SPL queries", "MITRE mapping", "remediation"]
+      implementation: "CrewAI with Senior SOC Triage Analyst, Threat Intelligence Analyst, and Orchestrator; verbatim role prompts"
+    - name: Splunk verification + human decision
+      role: "validate generated SPL against real logs and make the call"
+      inputs: ["SPL queries", "raw logs"]
+      outputs: ["Block / Allow / Monitor decision"]
+      implementation: "human analyst runs SPL in read-only mode"
+  orchestration: "strict sequential pipeline with two gates: DRL window filter, then priority threshold before the LLM; human is final decision authority; the anomaly score is deliberately excluded from the DRL state to prevent feature leakage; pseudonymization applied before any LLM call with a reversible SOC-side placeholder mapping"
+  memory:
+    type: "none"
+    details: "No persistent store; per-window feature vectors are recomputed from raw logs, plus a SOC-scoped anonymization mapping table."
+  tools: ["Splunk Enterprise", "Splunk Universal Forwarder", "Suricata", "CrewAI", "SPL"]
+  models:
+    - name: "autoencoder (8-2-8)"
+      role: "anomaly detection"
+      access: unknown
+    - name: "PPO MLP policy (2x64)"
+      role: "triage decision"
+      access: unknown
+    - name: "ChatGPT (Senior SOC Triage Analyst)"
+      role: "reasoning"
+      access: api
+    - name: "ChatGPT (Threat Intelligence Analyst)"
+      role: "reasoning"
+      access: api
+    - name: "ChatGPT (Orchestrator)"
+      role: "orchestration"
+      access: api
+
+evaluation:
+  datasets: ["BOSS of the SOC (BOTS) subset (~12k instances)", "custom simulated corpus (300k instances, Kali -> Windows 11)"]
+  metrics: ["precision", "recall", "F1", "decision cost", "regret", "traffic forwarded to LLM"]
+  baselines: ["reward-shaping modes A/B/C/D sweep"]
+  reported_results: "BOTS: mode B F1 0.861, recall 0.873; simulated corpus: mode D precision 0.926, recall 0.696, F1 0.795 with the lowest regret 1.358; ~63-65% reduction in traffic forwarded to the LLM"
+  reproducible: "partial"
+
+limitations:
+  - "Fixed 5-minute windows can miss short-lived attacks"
+  - "Binary action space (Allow/Contain) only; no monitor/throttle/escalate"
+  - "No RAG or vector store; context management is funneling-only"
+  - "No retry or fallback logic documented for LLM or SPL failures"
+  - "Read-only by design; all mitigation executed by humans (intentional)"
+  - "Dataset scale and diversity limited; single-attacker simulation"
+  - "Local-LLM accuracy and hallucination risk untested"
+
+review:
+  added_by: "@ahmedmaboud"
+  date: "2026-10-03"

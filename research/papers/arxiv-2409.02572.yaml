@@ -1,0 +1,70 @@
+schema_version: 1
+
+id: arxiv-2409.02572
+short_name: "GenDFIR"
+title: "Advancing Cyber Incident Timeline Analysis Through Retrieval-Augmented Generation and Large Language Models"
+authors: ["Fatma Yasmine Loumachi", "Mohamed Chahine Ghanem", "Mohamed Amine Ferrag"]
+year: 2025
+venue: "Computers 2025, 14(2), 67"
+links:
+  paper: "https://arxiv.org/abs/2409.02572"
+  code: "https://github.com/GenDFIR/GenDFIR"
+
+extraction_basis: full-text
+
+problem: incident-response
+input_modalities: ["incident event records", "forensic timeline artefacts", "analyst natural-language prompts"]
+
+architecture:
+  paradigm: rag
+  components:
+    - name: Incident preprocessing
+      role: "convert incident artefacts into structured event documents suitable for retrieval"
+      inputs: ["incident reports and event artefacts"]
+      outputs: ["chunked incident-event documents"]
+      implementation: "Incident data is organized into a structured knowledge base before retrieval; methodology/Algorithm 1."
+    - name: Embedding and vector retrieval
+      role: "retrieve the events most semantically relevant to an analyst query"
+      inputs: ["event chunks", "analyst query"]
+      outputs: ["top-K incident events"]
+      implementation: "mxbai-embed-large embeddings with cosine-similarity top-K retrieval; Algorithm 1."
+    - name: Context enrichment
+      role: "assemble retrieved evidence into the prompt context"
+      inputs: ["top-K events", "query"]
+      outputs: ["enriched evidence context"]
+      implementation: "Fixed retrieval/enrichment stage before generation; the LLM does not decide to retrieve iteratively."
+    - name: LLM timeline reasoner
+      role: "interpret retrieved evidence and answer timeline-analysis questions"
+      inputs: ["enriched evidence context", "analyst query"]
+      outputs: ["timeline explanation and incident analysis"]
+      implementation: "Llama 3.1 8B in zero-shot mode; methodology/Algorithm 1."
+  orchestration: "Fixed RAG pipeline: preprocess incident events -> embed events and query -> retrieve top-K matching events -> enrich context -> generate an answer with Llama 3.1 8B. Retrieval is a predetermined stage, so under the repository convention this is RAG rather than an agentic tool loop."
+  memory:
+    type: vector
+    details: "The incident knowledge base is embedded and reused as retrieval memory for analyst prompts within the investigation."
+  tools: ["mxbai-embed-large", "cosine-similarity retrieval", "PyTorch", "pandas"]
+  models:
+    - name: "Llama 3.1 8B"
+      role: "zero-shot timeline reasoning and answer generation"
+      access: open-weights
+    - name: "mxbai-embed-large"
+      role: "incident-event and query embedding"
+      access: open-weights
+
+evaluation:
+  datasets: ["synthetic DFIR incident scenarios covering phishing, SYN-flood/network attacks, Windows-style events, and mixed incident timelines"]
+  metrics: ["accuracy", "relevance", "exact match", "top-K evidence retrieval", "overall performance"]
+  baselines: unknown
+  reported_results: "The peer-reviewed version reports aggregate accuracy 95.52%, relevance 94.51%, exact match 100%, top-K 100%, and overall performance 97.51% under the authors' synthetic controlled scenarios (Section 5.3/Table 9). The paper cautions that the experimental configuration limits generalisability."
+  reproducible: "partial"
+
+limitations:
+  - "Evaluation uses synthetic, controlled incident scenarios rather than a production SOC or legal-forensics workload."
+  - "The authors state that GenDFIR should not be treated as a universal DFIR solution and that results may not generalize beyond the tested configuration."
+  - "Ground-truth checking and relevance assessment rely on a custom evaluation procedure rather than a broadly standardized DFIR benchmark."
+  - "RAG can ground answers in incident evidence but does not itself guarantee forensic provenance, chain of custody, or hallucination-free conclusions."
+  - "The fixed retrieval pipeline cannot autonomously decide to launch new telemetry queries when the retrieved context is insufficient."
+
+review:
+  added_by: "@lBebol"
+  date: "2026-10-04"

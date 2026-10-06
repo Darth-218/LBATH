@@ -1,0 +1,15 @@
+schema_version: 1
+id: doi-10.1109/ACCESS.2026.3707573
+
+relevance_to_us:
+  adopt:
+    - "PtE / PS+ prompting with a reasoning-class planner and cheap executors"
+    - "ATT&CK-anchored planning (guided task-tree completion 71.8-78.6% vs 13.5-16.5% self-guided)"
+    - "Deterministic verification layer between AI output and tool execution"
+    - "Budgets plus checkpointed replanning; MCP/A2A standards; sandbox containment"
+  avoid:
+    - "Offensive tool-first v1 (we start defensive)"
+    - "CTF-only benchmark metrics (we use the four-tier framework plus cost/regret)"
+  open_questions:
+    - "Which of its benchmarks (Cybench, NYU CTF, AgentDojo) could run in evaluation against our defensive stack?"
+    - "How to bridge the benchmark-to-production gap in our eval harness?"

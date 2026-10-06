@@ -1,0 +1,15 @@
+schema_version: 1
+id: arxiv-2504.05006
+relevance_to_us:
+  adopt:
+    - "Keep domain fine-tuning as a later specialization option once we have enough high-quality labeled hunt traces or security examples."
+    - "Evaluate class imbalance explicitly; rare attack techniques should not disappear behind aggregate accuracy."
+    - "Use a separate verification stage for candidate findings, but ground that verifier in deterministic evidence where possible."
+  avoid:
+    - "Making fine-tuning the MVP dependency before we have our own representative telemetry and labels."
+    - "Using duplicated oversampled examples as a substitute for collecting broader real attack evidence."
+    - "Assuming a model specialized to one domain will transfer to Windows, Linux, and network threat hunting without evaluation."
+  open_questions:
+    - "Can our future hunt traces become supervised examples for a specialized model without leaking evaluation data?"
+    - "Would LoRA provide enough benefit on our telemetry, or would prompting/RAG/tool-use give better returns for less training cost?"
+    - "Should the verifier be another LLM pass or a deterministic evidence-checking component over Wazuh/Zeek results?"

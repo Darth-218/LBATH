@@ -1,0 +1,65 @@
+schema_version: 1
+id: todo-agentic-reasoning
+short_name: "Agentic Reasoning Survey"
+title: "Agentic Reasoning for Large Language Models"
+authors:
+  - Tianxin Wei
+  - et al.
+year: 2026
+venue: "arXiv preprint"
+
+extraction_basis: full-text
+problem: detection-engineering
+input_modalities: [text]
+threat_intel_standards: []
+
+related: []
+
+architecture:
+  paradigm: hybrid
+  components:
+    - name: Foundational Agentic Reasoning
+      role: "core single-agent capabilities: planning, tool use, search"
+      inputs: []
+      outputs: []
+      implementation: "in-context or post-training"
+    - name: Self-evolving Agentic Reasoning
+      role: "feedback, memory, adaptation for continual improvement"
+      inputs: []
+      outputs: []
+      implementation: "reflection, memory, policy optimization"
+    - name: Collective Multi-agent Reasoning
+      role: "coordination, role assignment, shared memory"
+      inputs: []
+      outputs: []
+      implementation: "multi-agent systems"
+  orchestration: "varies by system; survey covers in-context and post-training optimization"
+  memory:
+    type: hybrid
+    details: "flat, structured, graph, multimodal, post-training control"
+  tools: ["varies"]
+  models:
+    - name: "GPT-4"
+      role: "reasoning"
+      access: unknown
+    - name: "LLaMA"
+      role: "reasoning"
+      access: unknown
+    - name: "DeepSeek"
+      role: "reasoning"
+      access: unknown
+
+evaluation:
+  datasets: ["many benchmarks across domains"]
+  metrics: ["varies"]
+  baselines: []
+  reported_results: "Survey synthesizing agentic reasoning methods"
+  reproducible: "unknown"
+
+limitations:
+  - "Survey, not a system"
+  - "No empirical validation"
+
+review:
+  added_by: "@user"
+  date: "2026-10-04"

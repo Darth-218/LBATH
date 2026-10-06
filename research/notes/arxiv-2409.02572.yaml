@@ -1,0 +1,14 @@
+schema_version: 1
+id: arxiv-2409.02572
+relevance_to_us:
+  adopt:
+    - "Use an incident-scoped retrieval store to ground explanations in evidence that has already been collected."
+    - "Keep retrieval outputs tied to the evidence used to construct a timeline so analysts can trace why the model reached a conclusion."
+    - "Treat fixed RAG as a grounding layer that can complement, rather than replace, an active threat-hunting loop."
+  avoid:
+    - "Treating strong synthetic-scenario scores as proof that the same design will work on noisy enterprise telemetry."
+    - "Allowing generated narrative to become the forensic source of truth without preserving the underlying event provenance."
+  open_questions:
+    - "Should our retrieval store contain raw events, normalized Wazuh/Zeek records, investigation summaries, or all three?"
+    - "Should the hunter first perform active telemetry queries and then invoke fixed RAG, or should both evidence sources be available every step?"
+    - "How do we cite retrieved event IDs and source indices inside every generated finding?"

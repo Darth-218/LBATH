@@ -1,0 +1,82 @@
+schema_version: 1
+
+id: doi-10.29121/DigiSecForensics.v2.i1.2025.86
+short_name: "CyberAgentX"
+title: "Agentic AI and Cyber Security: Autonomous Threat Hunting, Intrusion Detection, and Adaptive Defense Mechanisms in a World of Increasingly Sophisticated Cyber Attacks"
+authors: ["Ajay Simha Rangappa"]
+year: 2025
+venue: "Journal of Digital Security and Forensics"
+links:
+  paper: "https://doi.org/10.29121/DigiSecForensics.v2.i1.2025.86"
+
+extraction_basis: full-text
+
+problem: threat-hunting
+input_modalities: ["process execution chains", "network telemetry", "endpoint logs", "authentication records", "firewall alerts"]
+threat_intel_standards: [MITRE ATT&CK]
+
+architecture:
+  paradigm: agentic
+  components:
+    - name: Detector agent
+      role: "finds behavioral anomalies in process execution chains"
+      inputs: ["raw telemetry and process-chain events"]
+      outputs: ["behavioral anomaly signals"]
+      implementation: "graph attention network fused with transformer-based sequence modeling"
+    - name: Hunter agent
+      role: "prioritizes high-value investigation paths during hunting"
+      inputs: ["detector anomaly signals"]
+      outputs: ["prioritized hunt paths"]
+      implementation: "reinforcement-learning policy (PPO-style, AutoHunt referenced as prior art)"
+    - name: LLM orchestrator
+      role: "synthesizes narratives, emits low-false-positive alerts, and generates remediation playbooks"
+      inputs: ["anomaly signals", "prioritized hunt paths"]
+      outputs: ["threat narrative", "alerts", "SOAR playbooks"]
+      implementation: "LLM (model unspecified)"
+    - name: Critic module
+      role: "reviews past actions and adjusts future strategy"
+      inputs: ["action history and outcomes"]
+      outputs: ["strategy adjustments and feedback"]
+      implementation: "reflective autonomy loop (Reflexion-like)"
+    - name: SOAR integration
+      role: "executes remediation playbooks"
+      inputs: ["remediation playbooks"]
+      outputs: ["executed remediation actions"]
+      implementation: "SOAR platform running autonomously"
+  orchestration: "phased pipeline with a feedback loop: detect -> prioritize -> narrate -> execute via SOAR; the critic feeds lessons back into detectors and policies; micro-segmentation policy refreshed roughly every 90 seconds; high-stakes decisions reserved for human approval"
+  memory:
+    type: unknown
+    details: "No memory mechanism is described in the paper."
+  tools: ["SIEM (Splunk, Elastic)", "SOAR", "IDS/EDR"]
+  models:
+    - name: "GAT + transformer"
+      role: "anomaly detection"
+      access: unknown
+    - name: "RL policy (PPO)"
+      role: "hunt-path prioritization"
+      access: unknown
+    - name: "LLM orchestrator"
+      role: "orchestration"
+      access: unknown
+    - name: "LLM critic"
+      role: "reflection"
+      access: unknown
+
+evaluation:
+  datasets: ["ETD-2024 (2.4M labeled events, 150 orgs)", "SAPT-2024 (500 campaigns, 50 virtual environments)"]
+  metrics: ["precision", "recall", "F1", "AUC-ROC", "MTTD", "MTTR", "containment by ATT&CK phase", "analyst trust"]
+  baselines: ["XGBoost", "GAT-only", "baseline SOAR"]
+  reported_results: "F1 0.93 / AUC 0.98 vs XGBoost 0.77 (Table 1); MTTR reduced 45.1 to 7.8 minutes; containment by ATT&CK phase 97/89/91/88% vs baseline SOAR 68/51/39/42% (Table 2); analyst trust 72%"
+  reproducible: "no"
+
+limitations:
+  - "No prompts, code, or artifacts published despite claiming a reproducible methodology"
+  - "No hallucination guardrails described"
+  - "Autonomous SOAR execution without a documented sandbox or read-only API posture"
+  - "Black-box decision pathways; only 72% analyst trust even after SHAP/counterfactual exposure"
+  - "Adversarial robustness untested; the paper's own literature review reports 78% of tested LLM defense policies bypassable via jailbreaks"
+  - "Memory and retrieval strategy undefined"
+
+review:
+  added_by: "@ahmedmaboud"
+  date: "2026-10-03"

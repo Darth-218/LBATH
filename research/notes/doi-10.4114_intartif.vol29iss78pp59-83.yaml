@@ -1,0 +1,15 @@
+schema_version: 1
+id: doi-10.4114/intartif.vol29iss78pp59-83
+
+relevance_to_us:
+  adopt:
+    - "Four-tier evaluation framework (classification quality, intelligence quality, operational, robustness)"
+    - "RAG-as-grounding doctrine for hallucination reduction (deferred to v2 behind an interface)"
+    - "CRAKEN escalation rule: escalate only on a high-confidence threat or an impasse"
+    - "TRiSM guardrails: input validation, output filtering, adversarial testing"
+  avoid:
+    - "Single-agent reference design (we use role-separated multi-agent)"
+    - "Expensive full fine-tuning as the default"
+  open_questions:
+    - "How to operationalize confidence calibration in our L3 gate?"
+    - "Which TTP-sequence-annotated benchmark can serve as ground truth for hunt evaluation?"
