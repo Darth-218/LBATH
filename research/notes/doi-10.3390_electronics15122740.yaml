@@ -1,0 +1,14 @@
+schema_version: 1
+id: doi-10.3390/electronics15122740
+relevance_to_us:
+  adopt:
+    - "Use a pluggable ReAct loop with typed security-tool interfaces instead of letting the LLM call arbitrary infrastructure."
+    - "Keep explicit sanitization boundaries, tracing, confidence thresholds, and human approval around high-impact actions."
+    - "Evaluate latency and prompt-injection robustness alongside detection quality rather than reporting accuracy alone."
+  avoid:
+    - "Treating an illustrative reference scaffold as if it were already a validated production architecture."
+    - "Using synthetic or deterministic-stub results as evidence that an LLM hunter works on real SOC telemetry."
+  open_questions:
+    - "Do we need one hunter agent first, or a coordinator with specialized investigation, CTI, and response agents?"
+    - "Where should persistent memory live, and how do we prevent memory or message-bus poisoning?"
+    - "Which actions stay read-only, and which require explicit analyst approval?"
