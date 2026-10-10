@@ -54,11 +54,11 @@ evaluation:
   metrics: []                     # or: unknown
   baselines: []
   reported_results: "TODO headline numbers, with table/figure reference"
-  reproducible: unknown           # yes | no | partial | unknown
+  reproducible: "unknown"           # yes | no | partial | unknown
 
 # [] means the paper states none. Use [] rather than omitting the field.
 limitations: []
 
 review:
   added_by: "@TODO"
-  date: 2026-10-02
+  date: "2026-10-02"
