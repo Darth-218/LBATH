@@ -1,0 +1,114 @@
+schema_version: 1
+id: arxiv-2507.14201
+short_name: "ExCyTIn-Bench"
+title: "ExCyTIn-Bench: Evaluating LLM agents on Cyber Threat Investigation"
+authors:
+  - "Yiran Wu"
+  - "Mauricio Velazco"
+  - "Andrew Zhao"
+  - "Manuel Raúl Meléndez Luján"
+  - "Srisuma Movva"
+  - "Yogesh K Roy"
+  - "Quang Nguyen"
+  - "Roberto Rodriguez"
+  - "Qingyun Wu"
+  - "Michael Albada"
+  - "Julia Kiseleva"
+  - "Anand Mudgerikar"
+year: 2026
+venue: "ICML 2026"
+links:
+  paper: "https://arxiv.org/abs/2507.14201"
+  code: "https://github.com/microsoft/ExCyTIn-Bench"  # as referenced (SecRL in text points to repo)
+
+extraction_basis: full-text
+
+problem: threat-hunting
+input_modalities:
+  - text
+  - logs
+  - network
+  - graph
+threat_intel_standards:
+  - MITRE ATT&CK
+
+related: []
+
+architecture:
+  paradigm: agentic
+  components:
+    - name: environment
+      role: "MySQL sandbox for log querying"
+      inputs:
+        - sql queries
+      outputs:
+        - query results
+      implementation: "MySQL Docker image following InterCode style"
+    - name: agent
+      role: "LLM agent that explores schema, queries logs, reasons over evidence"
+      inputs:
+        - questions
+        - query results
+      outputs:
+        - sql queries
+        - final answers
+      implementation: "LLM with optional prompting (ReAct/Expel/reflection/BoN)"
+    - name: qa-generator
+      role: "Builds bipartite alert-entity graphs and generates QAs from paths"
+      inputs:
+        - security logs
+        - incidents/alerts
+      outputs:
+        - questions with answers and solution paths
+      implementation: "Algorithm using LLM to generate questions from graph paths"
+    - name: graph-builder
+      role: "Constructs bipartite graph (alerts <-> entities)"
+      inputs:
+        - alerts and entity lists
+      outputs:
+        - bipartite incident graphs
+      implementation: "Alerts partition U, entities V, edges from alerts to entities"
+    - name: evaluator
+      role: "Grades answers with partial credit for intermediate steps"
+      inputs:
+        - submitted answer
+        - gold answer
+        - solution path steps
+      outputs:
+        - reward (0-1)
+      implementation: "Exact match + decayed partial credit for matching intermediate step info"
+  orchestration: "planner-executor style; agent interacts turn-by-turn (max N steps) issuing SQL or submitting answer"
+  memory:
+    type: episodic
+    details: "agent accumulates observations (query results, errors, schema info) across turns; no external long-term vector store in base setup (Expel adds distilled rules/memory)"
+  tools:
+    - "sql_execute (SHOW TABLES, DESCRIBE, SELECT)"
+  models:
+    - name: "various LLMs"
+      role: "reasoning/agent backbone"
+      access: mixed  # proprietary and open-weights tested
+
+evaluation:
+  datasets:
+    - "7542 questions total; 589 test questions across 8 incidents"
+  metrics:
+    - "reward (exact match + partial credit for intermediate steps)"
+    - "turns"
+    - "cost"
+    - "query success rate"
+  baselines:
+    - "ReAct"
+    - "Expel"
+    - "reflection"
+    - "Best-of-N"
+  reported_results: "Best model (Claude-Opus-4.5) reached 0.606 avg reward; strong correlation (r=0.86) between query success and reward"
+  reproducible: partial
+
+limitations:
+  - "constructed from single fictional Azure tenant"
+  - "questions derived from security tables (graph-based) may bias toward alert-centric investigation"
+  - "SQL-only interaction (no GUI/tools beyond querying)"
+
+review:
+  added_by: "@arch-notes"
+  date: "2026-10-04"

@@ -1,0 +1,113 @@
+schema_version: 1
+id: todo-ieee-access-2025-3602681
+short_name: "Multi-Agent LLM Threat Correlation"
+title: "A Multi-Agent System for Cybersecurity Threat Detection and Correlation Using Large Language Models"
+authors:
+  - "Yasser Hmimou"
+  - "Mohamed Tabaa"
+  - "Azeddine Khiat"
+  - "Zineb Hidila"
+year: 2025
+venue: "IEEE Access (Vol. 13, 2025)"
+links:
+  paper: "https://ieeexplore.ieee.org/document/3602681/"
+
+extraction_basis: full-text
+
+problem: threat-hunting
+input_modalities:
+  - text
+  - logs
+  - network
+threat_intel_standards:
+  - MITRE ATT&CK
+  - CVE
+  - NVD
+
+related: []
+
+architecture:
+  paradigm: agentic
+  components:
+    - name: task-dispatcher
+      role: "Input validation, task classification, routing to domain agents"
+      inputs:
+        - email/logs/IP range inputs
+      outputs:
+        - routed tasks
+      implementation: "Central gateway managing preprocessing and asynchronous routing"
+    - name: email-verification-agent
+      role: "Detect phishing/spoofing (including AI-generated)"
+      inputs:
+        - email headers/body/URLs
+      outputs:
+        - structured verdict and explanation
+      implementation: "Regex/tldextract/dns, FAISS similarity search, RAG + LLM reasoning"
+    - name: log-analyzer-agent
+      role: "Detect anomalies/attacks in logs"
+      inputs:
+        - system/network logs
+      outputs:
+        - anomaly classification + explanation
+      implementation: "ELK normalization, Suricata signatures, LLM for sequential interpretation with memory"
+    - name: ip-range-analyzer-agent
+      role: "Network exposure and vulnerability assessment"
+      inputs:
+        - IP/CIDR ranges
+      outputs:
+        - host/service/CVE risk summaries
+      implementation: "Nmap scanning, NVD CVE lookup, LLM semantic summaries"
+    - name: contextual-recommendation-system
+      role: "Cross-agent correlation and synthesis"
+      inputs:
+        - agent reports
+      outputs:
+        - unified threat narrative with recommendations
+      implementation: "Entity/temporal correlation, confidence scoring, LLM synthesis of final report"
+  orchestration: "Modular pipeline; dispatcher routes tasks; agents run independently and feed central correlation for multi-vector detection"
+  memory:
+    type: episodic
+    details: "Log analyzer retains recent analyses/high-risk patterns for temporal correlation; other agents use RAG/indexed references"
+  tools:
+    - "FAISS"
+    - "Suricata"
+    - "ELK"
+    - "Nmap"
+    - "NVD API"
+    - "tldextract"
+    - "dns.resolver"
+    - "regex"
+  models:
+    - name: "LLaMA 3.3-70B (Groq API)"
+      role: "semantic reasoning/explanation"
+      access: api
+
+evaluation:
+  datasets:
+    - "SpamAssassin corpus"
+    - "CIC-IDS 2017"
+    - "synthetic phishing emails + simulated IP/log scenarios"
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "F1"
+    - "false positive rate"
+    - "correlation accuracy"
+    - "analyst triage time reduction"
+    - "explanation success/analyst confidence"
+  baselines:
+    - "traditional rule-based/SIEM"
+    - "single-agent pipelines"
+  reported_results: "93.6% detection accuracy, 87% multi-agent correlation accuracy, 41.3% FPR reduction; high explanation quality"
+  reproducible: partial
+
+limitations:
+  - "legacy benchmark datasets may not reflect newest attack vectors"
+  - "API/tool dependencies introduce latency/single points of failure"
+  - "LLM explanations depend on prompt/model consistency"
+  - "synthetic validation data not fully public"
+
+review:
+  added_by: "@arch-notes"
+  date: "2026-10-04"
