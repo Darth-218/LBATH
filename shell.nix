@@ -16,6 +16,6 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    echo "LBATH env read."
+    echo "LBATH env ready."
   '';
 }
