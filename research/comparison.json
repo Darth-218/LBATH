@@ -37,6 +37,10 @@
         "todo-llm-nids-survey",
         "todo-org-scoped-runtime"
       ],
+      "Suricata": [
+        "arxiv-2603.23966",
+        "todo-ieee-access-2025-3602681"
+      ],
       "code execution": [
         "arxiv-2303.11366",
         "todo-vuln-detect-survey"
@@ -44,6 +48,152 @@
     }
   },
   "papers": [
+    {
+      "architecture": {
+        "components": [
+          {
+            "implementation": "MySQL Docker image following InterCode style",
+            "inputs": [
+              "sql queries"
+            ],
+            "name": "environment",
+            "outputs": [
+              "query results"
+            ],
+            "role": "MySQL sandbox for log querying"
+          },
+          {
+            "implementation": "LLM with optional prompting (ReAct/Expel/reflection/BoN)",
+            "inputs": [
+              "questions",
+              "query results"
+            ],
+            "name": "agent",
+            "outputs": [
+              "sql queries",
+              "final answers"
+            ],
+            "role": "LLM agent that explores schema, queries logs, reasons over evidence"
+          },
+          {
+            "implementation": "Algorithm using LLM to generate questions from graph paths",
+            "inputs": [
+              "security logs",
+              "incidents/alerts"
+            ],
+            "name": "qa-generator",
+            "outputs": [
+              "questions with answers and solution paths"
+            ],
+            "role": "Builds bipartite alert-entity graphs and generates QAs from paths"
+          },
+          {
+            "implementation": "Alerts partition U, entities V, edges from alerts to entities",
+            "inputs": [
+              "alerts and entity lists"
+            ],
+            "name": "graph-builder",
+            "outputs": [
+              "bipartite incident graphs"
+            ],
+            "role": "Constructs bipartite graph (alerts <-> entities)"
+          },
+          {
+            "implementation": "Exact match + decayed partial credit for matching intermediate step info",
+            "inputs": [
+              "submitted answer",
+              "gold answer",
+              "solution path steps"
+            ],
+            "name": "evaluator",
+            "outputs": [
+              "reward (0-1)"
+            ],
+            "role": "Grades answers with partial credit for intermediate steps"
+          }
+        ],
+        "memory": {
+          "details": "agent accumulates observations (query results, errors, schema info) across turns; no external long-term vector store in base setup (Expel adds distilled rules/memory)",
+          "type": "episodic"
+        },
+        "models": [
+          {
+            "access": "mixed",
+            "name": "various LLMs",
+            "role": "reasoning/agent backbone"
+          }
+        ],
+        "orchestration": "planner-executor style; agent interacts turn-by-turn (max N steps) issuing SQL or submitting answer",
+        "paradigm": "agentic",
+        "tools": [
+          "sql_execute (SHOW TABLES, DESCRIBE, SELECT)"
+        ]
+      },
+      "authors": [
+        "Yiran Wu",
+        "Mauricio Velazco",
+        "Andrew Zhao",
+        "Manuel Raúl Meléndez Luján",
+        "Srisuma Movva",
+        "Yogesh K Roy",
+        "Quang Nguyen",
+        "Roberto Rodriguez",
+        "Qingyun Wu",
+        "Michael Albada",
+        "Julia Kiseleva",
+        "Anand Mudgerikar"
+      ],
+      "evaluation": {
+        "baselines": [
+          "ReAct",
+          "Expel",
+          "reflection",
+          "Best-of-N"
+        ],
+        "datasets": [
+          "7542 questions total; 589 test questions across 8 incidents"
+        ],
+        "metrics": [
+          "reward (exact match + partial credit for intermediate steps)",
+          "turns",
+          "cost",
+          "query success rate"
+        ],
+        "reported_results": "Best model (Claude-Opus-4.5) reached 0.606 avg reward; strong correlation (r=0.86) between query success and reward",
+        "reproducible": "partial"
+      },
+      "extraction_basis": "full-text",
+      "id": "arxiv-2507.14201",
+      "input_modalities": [
+        "text",
+        "logs",
+        "network",
+        "graph"
+      ],
+      "limitations": [
+        "constructed from single fictional Azure tenant",
+        "questions derived from security tables (graph-based) may bias toward alert-centric investigation",
+        "SQL-only interaction (no GUI/tools beyond querying)"
+      ],
+      "links": {
+        "code": "https://github.com/microsoft/ExCyTIn-Bench",
+        "paper": "https://arxiv.org/abs/2507.14201"
+      },
+      "problem": "threat-hunting",
+      "related": [],
+      "review": {
+        "added_by": "@arch-notes",
+        "date": "2026-10-04"
+      },
+      "schema_version": 1,
+      "short_name": "ExCyTIn-Bench",
+      "threat_intel_standards": [
+        "MITRE ATT&CK"
+      ],
+      "title": "ExCyTIn-Bench: Evaluating LLM agents on Cyber Threat Investigation",
+      "venue": "ICML 2026",
+      "year": 2026
+    },
     {
       "architecture": {
         "components": [
@@ -1600,6 +1750,151 @@
       ],
       "title": "Agentic AI and Cyber Security: Autonomous Threat Hunting, Intrusion Detection, and Adaptive Defense Mechanisms in a World of Increasingly Sophisticated Cyber Attacks",
       "venue": "Journal of Digital Security and Forensics",
+      "year": 2025
+    },
+    {
+      "architecture": {
+        "components": [
+          {
+            "implementation": "Central gateway managing preprocessing and asynchronous routing",
+            "inputs": [
+              "email/logs/IP range inputs"
+            ],
+            "name": "task-dispatcher",
+            "outputs": [
+              "routed tasks"
+            ],
+            "role": "Input validation, task classification, routing to domain agents"
+          },
+          {
+            "implementation": "Regex/tldextract/dns, FAISS similarity search, RAG + LLM reasoning",
+            "inputs": [
+              "email headers/body/URLs"
+            ],
+            "name": "email-verification-agent",
+            "outputs": [
+              "structured verdict and explanation"
+            ],
+            "role": "Detect phishing/spoofing (including AI-generated)"
+          },
+          {
+            "implementation": "ELK normalization, Suricata signatures, LLM for sequential interpretation with memory",
+            "inputs": [
+              "system/network logs"
+            ],
+            "name": "log-analyzer-agent",
+            "outputs": [
+              "anomaly classification + explanation"
+            ],
+            "role": "Detect anomalies/attacks in logs"
+          },
+          {
+            "implementation": "Nmap scanning, NVD CVE lookup, LLM semantic summaries",
+            "inputs": [
+              "IP/CIDR ranges"
+            ],
+            "name": "ip-range-analyzer-agent",
+            "outputs": [
+              "host/service/CVE risk summaries"
+            ],
+            "role": "Network exposure and vulnerability assessment"
+          },
+          {
+            "implementation": "Entity/temporal correlation, confidence scoring, LLM synthesis of final report",
+            "inputs": [
+              "agent reports"
+            ],
+            "name": "contextual-recommendation-system",
+            "outputs": [
+              "unified threat narrative with recommendations"
+            ],
+            "role": "Cross-agent correlation and synthesis"
+          }
+        ],
+        "memory": {
+          "details": "Log analyzer retains recent analyses/high-risk patterns for temporal correlation; other agents use RAG/indexed references",
+          "type": "episodic"
+        },
+        "models": [
+          {
+            "access": "api",
+            "name": "LLaMA 3.3-70B (Groq API)",
+            "role": "semantic reasoning/explanation"
+          }
+        ],
+        "orchestration": "Modular pipeline; dispatcher routes tasks; agents run independently and feed central correlation for multi-vector detection",
+        "paradigm": "agentic",
+        "tools": [
+          "FAISS",
+          "Suricata",
+          "ELK",
+          "Nmap",
+          "NVD API",
+          "tldextract",
+          "dns.resolver",
+          "regex"
+        ]
+      },
+      "authors": [
+        "Yasser Hmimou",
+        "Mohamed Tabaa",
+        "Azeddine Khiat",
+        "Zineb Hidila"
+      ],
+      "evaluation": {
+        "baselines": [
+          "traditional rule-based/SIEM",
+          "single-agent pipelines"
+        ],
+        "datasets": [
+          "SpamAssassin corpus",
+          "CIC-IDS 2017",
+          "synthetic phishing emails + simulated IP/log scenarios"
+        ],
+        "metrics": [
+          "accuracy",
+          "precision",
+          "recall",
+          "F1",
+          "false positive rate",
+          "correlation accuracy",
+          "analyst triage time reduction",
+          "explanation success/analyst confidence"
+        ],
+        "reported_results": "93.6% detection accuracy, 87% multi-agent correlation accuracy, 41.3% FPR reduction; high explanation quality",
+        "reproducible": "partial"
+      },
+      "extraction_basis": "full-text",
+      "id": "todo-ieee-access-2025-3602681",
+      "input_modalities": [
+        "text",
+        "logs",
+        "network"
+      ],
+      "limitations": [
+        "legacy benchmark datasets may not reflect newest attack vectors",
+        "API/tool dependencies introduce latency/single points of failure",
+        "LLM explanations depend on prompt/model consistency",
+        "synthetic validation data not fully public"
+      ],
+      "links": {
+        "paper": "https://ieeexplore.ieee.org/document/3602681/"
+      },
+      "problem": "threat-hunting",
+      "related": [],
+      "review": {
+        "added_by": "@arch-notes",
+        "date": "2026-10-04"
+      },
+      "schema_version": 1,
+      "short_name": "Multi-Agent LLM Threat Correlation",
+      "threat_intel_standards": [
+        "MITRE ATT&CK",
+        "CVE",
+        "NVD"
+      ],
+      "title": "A Multi-Agent System for Cybersecurity Threat Detection and Correlation Using Large Language Models",
+      "venue": "IEEE Access (Vol. 13, 2025)",
       "year": 2025
     },
     {

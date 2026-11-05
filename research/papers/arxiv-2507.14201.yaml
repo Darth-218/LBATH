@@ -1,5 +1,5 @@
 schema_version: 1
-id: arxiv-2507.14201v3
+id: arxiv-2507.14201
 short_name: "ExCyTIn-Bench"
 title: "ExCyTIn-Bench: Evaluating LLM agents on Cyber Threat Investigation"
 authors:
@@ -18,7 +18,7 @@ authors:
 year: 2026
 venue: "ICML 2026"
 links:
-  paper: "https://arxiv.org/abs/2507.14201v3"
+  paper: "https://arxiv.org/abs/2507.14201"
   code: "https://github.com/microsoft/ExCyTIn-Bench"  # as referenced (SecRL in text points to repo)
 
 extraction_basis: full-text
@@ -111,4 +111,4 @@ limitations:
 
 review:
   added_by: "@arch-notes"
-  date: 2026-10-04
+  date: "2026-10-04"

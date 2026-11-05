@@ -27,7 +27,7 @@ threat_intel_standards:
 related: []
 
 architecture:
-  paradigm: multi-agent
+  paradigm: agentic
   components:
     - name: task-dispatcher
       role: "Input validation, task classification, routing to domain agents"
@@ -110,4 +110,4 @@ limitations:
 
 review:
   added_by: "@arch-notes"
-  date: 2026-10-04
+  date: "2026-10-04"
