@@ -13,6 +13,8 @@ comparable. Read this before your first entry.
 - [problem](#problem)
 - [extraction_basis](#extraction_basis)
 - [unknown is a legal value](#unknown-is-a-legal-value)
+- [Gaps, limitations, and open questions](#gaps-limitations-and-open-questions)
+- [Curated gap evidence](#curated-gap-evidence)
 - [Relations](#relations)
 - [Adding a field is a schema change](#adding-a-field-is-a-schema-change)
 
@@ -224,6 +226,36 @@ field — an empty list and a missing field are different claims.
 
 Do not use `unknown` to avoid reading the paper. It means you looked and the
 information is not there.
+
+## Gaps, limitations, and open questions
+
+These are different claims. Do not merge them.
+
+- `papers/<id>.yaml:limitations` — what the paper reports, or what the
+  extraction found in the paper. This is objective and per-paper. Cite the
+  section, table, or figure where possible. Use `[]` when the paper states
+  none; never omit the field.
+- `notes/<id>.yaml:relevance_to_us.avoid` — a pattern from the paper that we
+  deliberately will not copy. This is our design stance, not a claim that the
+  paper is wrong.
+- `notes/<id>.yaml:relevance_to_us.open_questions` — unresolved decisions for
+  our system. A question can be prompted by a paper, but it is not a paper
+  limitation.
+- `curated_gaps.yaml` — cross-paper research gaps that do not belong to a
+  single paper. Each gap has a stable `gap-…` id, a `statement`, a `status`,
+  and an `origin`. Use `open` when current entries support the claim. Use
+  `historical` when the supporting source is not in the corpus.
+
+## Curated gap evidence
+
+Evidence entries are `{paper, field, quote}` with an optional `source`
+(`paper` or `note`, default `paper`). `paper` must be an existing id. `field`
+is a dotted path into that paper or note; `quote` must match an item in a list
+field verbatim or appear in a string field verbatim.
+
+`GAPS.md` is generated from these fields by `render.py`. Do not edit it by
+hand. Curated gaps with `status: historical` may have no evidence, but they
+must still have an `origin`.
 
 ## Relations
 

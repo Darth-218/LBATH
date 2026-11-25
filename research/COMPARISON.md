@@ -4,6 +4,8 @@
 
 *17 entries in the corpus, 17 with full-text extraction.*
 
+See [GAPS.md](GAPS.md) for curated gaps, paper limitations, and notes.
+
 ## Full-text extractions
 
 | Paper | Year | Paradigm | Memory | Tools | Eval datasets | Repro |

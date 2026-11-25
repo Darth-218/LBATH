@@ -1,0 +1,11 @@
+schema_version: 1
+gaps:
+  - id: gap-example
+    statement: "TODO gap statement"
+    status: open
+    origin: "TODO paper id, issue, or report reference"
+    evidence:
+      - paper: arxiv-2401.00000
+        source: paper
+        field: limitations
+        quote: "TODO exact quote from the referenced field"

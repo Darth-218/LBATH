@@ -11,6 +11,8 @@ Checks, in order:
   6. Every `related[].id` resolves to a known paper.
   7. Relations are authored in the forward direction only, with no
      self-references, duplicate edges, or contradictory back-edges.
+  8. Every curated gap conforms to schema.json, has a unique id, and every
+     evidence entry resolves to a real paper or note field whose quote matches.
 
 Exit status is 0 when the corpus is clean, 1 otherwise.
 
@@ -36,6 +38,7 @@ except ImportError as exc:  # pragma: no cover
 RESEARCH = Path(__file__).resolve().parent.parent
 PAPERS_DIR = RESEARCH / "papers"
 NOTES_DIR = RESEARCH / "notes"
+CURATED_GAPS_PATH = RESEARCH / "curated_gaps.yaml"
 SCHEMA_PATH = RESEARCH / "schema.json"
 
 # Relations an author may declare. The inverse of each is derived by
@@ -224,6 +227,68 @@ def check_notes(notes: dict, note_paths: dict, papers: dict, report: Report) -> 
             )
 
 
+MISSING = object()
+
+
+def resolve_field(entry: dict, field: str):
+    node = entry
+    for part in field.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return MISSING
+        node = node[part]
+    return node
+
+
+def quote_matches(node, quote: str) -> bool:
+    if isinstance(node, list):
+        return quote in node
+    if isinstance(node, str):
+        return quote in node
+    return False
+
+
+def check_curated_gaps(
+    data: dict,
+    path: Path,
+    papers: dict,
+    notes: dict,
+    report: Report,
+) -> None:
+    seen: set[str] = set()
+    for gap in data.get("gaps") or []:
+        gap_id = gap["id"]
+        if gap_id in seen:
+            report.error(path, f"duplicate curated gap id {gap_id!r}")
+        seen.add(gap_id)
+
+        for evidence in gap.get("evidence") or []:
+            paper_id = evidence["paper"]
+            source = evidence.get("source", "paper")
+            field = evidence["field"]
+            quote = evidence["quote"]
+            target = papers if source == "paper" else notes
+            directory = "papers" if source == "paper" else "notes"
+
+            if paper_id not in target:
+                report.error(
+                    path,
+                    f"gap {gap_id!r}: evidence id {paper_id!r} has no {directory}/ entry",
+                )
+                continue
+
+            node = resolve_field(target[paper_id], field)
+            if node is MISSING:
+                report.error(
+                    path,
+                    f"gap {gap_id!r}: {directory}/{paper_id!r} has no field {field!r}",
+                )
+            elif not quote_matches(node, quote):
+                report.error(
+                    path,
+                    f"gap {gap_id!r}: quote does not match {directory}/{paper_id!r}:{field}",
+                )
+
+
 def emit(report: Report) -> None:
     for label, items in (("error", report.errors), ("warning", report.warnings)):
         grouped: dict[str, list[str]] = {}
@@ -238,9 +303,10 @@ def emit(report: Report) -> None:
 def main() -> int:
     report = Report()
 
-    if not SCHEMA_PATH.exists():
-        print(f"missing schema: {_display(SCHEMA_PATH)}", file=sys.stderr)
-        return 1
+    for required in (SCHEMA_PATH, CURATED_GAPS_PATH):
+        if not required.exists():
+            print(f"missing file: {_display(required)}", file=sys.stderr)
+            return 1
 
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
@@ -255,6 +321,12 @@ def main() -> int:
     check_relations(papers, paper_paths, report)
     check_notes(notes, note_paths, papers, report)
 
+    curated_data = load(CURATED_GAPS_PATH, report)
+    if curated_data is not None and check_schema(
+        curated_data, "curatedGaps", schema, CURATED_GAPS_PATH, report
+    ):
+        check_curated_gaps(curated_data, CURATED_GAPS_PATH, papers, notes, report)
+
     emit(report)
 
     n_err, n_warn = len(report.errors), len(report.warnings)
@@ -266,8 +338,12 @@ def main() -> int:
         )
         return 1
 
+    curated_count = len((curated_data or {}).get("gaps") or [])
     suffix = f" ({n_warn} warning{'s' if n_warn != 1 else ''})" if n_warn else ""
-    print(f"ok: {len(papers)} papers, {len(notes)} notes{suffix}")
+    print(
+        f"ok: {len(papers)} papers, {len(notes)} notes, "
+        f"{curated_count} curated gaps{suffix}"
+    )
     return 0
 
 

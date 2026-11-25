@@ -1,0 +1,61 @@
+schema_version: 1
+gaps:
+  - id: gap-hypothesis-generation
+    statement: "Hypothesis Generation (Step 2) - Most under-served component (Mahboubi); Chona shows agents fail at spontaneous hypothesis generation (Credential Access/Initial Access blind spots)"
+    status: historical
+    origin: "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:194"
+    evidence: []
+
+  - id: gap-multi-agent-orchestration
+    statement: "Multi-Agent Orchestration - All three primarily single-agent; Mohsin notes future work on agent teams"
+    status: historical
+    origin: "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:195"
+    evidence:
+      - paper: doi-10.3390/electronics15122740
+        source: note
+        field: relevance_to_us.open_questions
+        quote: "Do we need one hunter agent first, or a coordinator with specialized investigation, CTI, and response agents?"
+
+  - id: gap-error-recovery
+    statement: "Error Recovery - Chona surfaces errors but has no explicit retry/fallback policies; others don't specify"
+    status: historical
+    origin: "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:196"
+    evidence: []
+
+  - id: gap-tactic-specific-knowledge
+    statement: "Tactic-Specific Knowledge - Chona empirically shows domain-specific query knowledge missing (ATT&CK mapping failures)"
+    status: open
+    origin: "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:197"
+    evidence:
+      - paper: arxiv-2604.19533
+        source: paper
+        field: evaluation.reported_results
+        quote: "no model meets the paper's operational bar of >=50% recall on every ATT&CK tactic"
+      - paper: arxiv-2604.19533
+        source: note
+        field: relevance_to_us.open_questions
+        quote: "Should our evaluator score event recall, ATT&CK-step coverage, evidence quality, or a weighted combination?"
+
+  - id: gap-cross-platform-telemetry
+    statement: "Cross-Platform Telemetry - All focus on Windows/event logs; limited coverage of Linux/cloud/network flows"
+    status: open
+    origin: "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:198"
+    evidence:
+      - paper: arxiv-2604.19533
+        source: paper
+        field: limitations
+        quote: "All attack telemetry is Windows-only; Linux auditd, cloud telemetry, and network-flow hunting are not covered."
+      - paper: arxiv-2604.19533
+        source: note
+        field: relevance_to_us.open_questions
+        quote: "How should the UniversalHunter query loop map to Wazuh/OpenSearch and Zeek instead of a single SQLite table?"
+
+  - id: gap-adversarial-robustness
+    statement: "Adversarial Robustness - Named as risk (Mohsin) but never empirically tested"
+    status: open
+    origin: "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:199"
+    evidence:
+      - paper: doi-10.29121/DigiSecForensics.v2.i1.2025.86
+        source: paper
+        field: limitations
+        quote: "Adversarial robustness untested; the paper's own literature review reports 78% of tested LLM defense policies bypassable via jailbreaks"
