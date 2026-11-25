@@ -17,6 +17,7 @@ research/
     papers/<id>.yaml      # objective extraction — reviewed against the paper
     notes/<id>.yaml       # relevance_to_us — reviewed as an argument
     curated_gaps.yaml     # curated cross-paper gaps
+    archive/              # historical reports, not active corpus
     templates/            # copy-paste starters
     scripts/              # validate.py, render.py
     COMPARISON.md         # generated, committed
@@ -28,7 +29,8 @@ Facts and opinions live in separate files because the paper's architecture
 never changes, while our opinion of it changes every time our system does.
 Cross-paper gaps live in `curated_gaps.yaml` because they do not belong to a
 single paper. Colocating these would mean the record of the paper mutates for
-unrelated reasons.
+unrelated reasons. Historical reports kept for provenance go in `archive/` and
+are not validated as corpus entries.
 
 ## Adding a paper
 
