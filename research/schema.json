@@ -82,6 +82,54 @@
       }
     },
 
+    "gapId": {
+      "type": "string",
+      "description": "A stable gap key: gap- followed by lowercase words separated by hyphens.",
+      "pattern": "^gap-[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+
+    "gapEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paper", "field", "quote"],
+      "properties": {
+        "paper": { "$ref": "#/$defs/id" },
+        "source": { "enum": ["paper", "note"] },
+        "field": { "$ref": "#/$defs/nonEmptyString" },
+        "quote": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+
+    "curatedGap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement", "status", "origin"],
+      "properties": {
+        "id": { "$ref": "#/$defs/gapId" },
+        "statement": { "$ref": "#/$defs/nonEmptyString" },
+        "status": { "enum": ["open", "historical", "addressed", "deferred"] },
+        "origin": { "$ref": "#/$defs/nonEmptyString" },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/gapEvidence" }
+        }
+      }
+    },
+
+    "curatedGaps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "gaps"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "gaps": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/curatedGap" }
+        }
+      }
+    },
+
     "paper": {
       "type": "object",
       "additionalProperties": false,

@@ -1,4 +1,88 @@
 {
+  "curated_gaps": [
+    {
+      "evidence": [
+        {
+          "field": "limitations",
+          "paper": "doi-10.29121/DigiSecForensics.v2.i1.2025.86",
+          "quote": "Adversarial robustness untested; the paper's own literature review reports 78% of tested LLM defense policies bypassable via jailbreaks",
+          "source": "paper"
+        }
+      ],
+      "id": "gap-adversarial-robustness",
+      "origin": "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:199",
+      "statement": "Adversarial Robustness - Named as risk (Mohsin) but never empirically tested",
+      "status": "open"
+    },
+    {
+      "evidence": [
+        {
+          "field": "limitations",
+          "paper": "arxiv-2604.19533",
+          "quote": "All attack telemetry is Windows-only; Linux auditd, cloud telemetry, and network-flow hunting are not covered.",
+          "source": "paper"
+        },
+        {
+          "field": "relevance_to_us.open_questions",
+          "paper": "arxiv-2604.19533",
+          "quote": "How should the UniversalHunter query loop map to Wazuh/OpenSearch and Zeek instead of a single SQLite table?",
+          "source": "note"
+        }
+      ],
+      "id": "gap-cross-platform-telemetry",
+      "origin": "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:198",
+      "statement": "Cross-Platform Telemetry - All focus on Windows/event logs; limited coverage of Linux/cloud/network flows",
+      "status": "open"
+    },
+    {
+      "evidence": [],
+      "id": "gap-error-recovery",
+      "origin": "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:196",
+      "statement": "Error Recovery - Chona surfaces errors but has no explicit retry/fallback policies; others don't specify",
+      "status": "historical"
+    },
+    {
+      "evidence": [],
+      "id": "gap-hypothesis-generation",
+      "origin": "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:194",
+      "statement": "Hypothesis Generation (Step 2) - Most under-served component (Mahboubi); Chona shows agents fail at spontaneous hypothesis generation (Credential Access/Initial Access blind spots)",
+      "status": "historical"
+    },
+    {
+      "evidence": [
+        {
+          "field": "relevance_to_us.open_questions",
+          "paper": "doi-10.3390/electronics15122740",
+          "quote": "Do we need one hunter agent first, or a coordinator with specialized investigation, CTI, and response agents?",
+          "source": "note"
+        }
+      ],
+      "id": "gap-multi-agent-orchestration",
+      "origin": "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:195",
+      "statement": "Multi-Agent Orchestration - All three primarily single-agent; Mohsin notes future work on agent teams",
+      "status": "historical"
+    },
+    {
+      "evidence": [
+        {
+          "field": "evaluation.reported_results",
+          "paper": "arxiv-2604.19533",
+          "quote": "no model meets the paper's operational bar of >=50% recall on every ATT&CK tactic",
+          "source": "paper"
+        },
+        {
+          "field": "relevance_to_us.open_questions",
+          "paper": "arxiv-2604.19533",
+          "quote": "Should our evaluator score event recall, ATT&CK-step coverage, evidence quality, or a weighted combination?",
+          "source": "note"
+        }
+      ],
+      "id": "gap-tactic-specific-knowledge",
+      "origin": "b1ddd76:ARCHITECTURE_EXTRACTION_REPORT.md:197",
+      "statement": "Tactic-Specific Knowledge - Chona empirically shows domain-specific query knowledge missing (ATT&CK mapping failures)",
+      "status": "open"
+    }
+  ],
   "generated_by": "research/scripts/render.py",
   "overlap": {
     "datasets": {
